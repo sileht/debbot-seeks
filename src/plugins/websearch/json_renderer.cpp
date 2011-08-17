@@ -106,13 +106,17 @@ namespace seeks_plugins
         = qc->_suggestions.begin();
         while(mit!=qc->_suggestions.end())
           {
-            suggs.push_back("\"" + (*mit).second + "\"");
+            std::string sugg = (*mit).second;
+            miscutil::replace_in_string(sugg,"\\","\\\\");
+            miscutil::replace_in_string(sugg,"\"","\\\"");
+            suggs.push_back("\"" + sugg + "\"");
             if (k > websearch::_wconfig->_num_reco_queries)
               break;
             ++k;
             ++mit;
           }
-        return "\"suggestions\":[" + miscutil::join_string_list(",",suggs) + "]";
+        return "\"suggestions\":[" + miscutil::join_string_list(",",suggs) + "]"
+               + ",\"rqueries\":" + miscutil::to_string(qc->_suggestions.size());
       }
     return "";
   }
@@ -410,6 +414,9 @@ namespace json_renderer_private
 
     // expansion.
     results.push_back("\"expansion\":\"" + miscutil::to_string(qc->_page_expansion) + "\"");
+
+    // peers.
+    results.push_back("\"npeers\":\"" + miscutil::to_string(qc->_npeers) + "\"");
 
     // related queries.
     std::string related_queries = json_renderer::render_related_queries(qc);

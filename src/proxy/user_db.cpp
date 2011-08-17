@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2010 Emmanuel Benazera, ebenazer@seeks-project.info
+ * Copyright (C) 2010-2011 Emmanuel Benazera, ebenazer@seeks-project.info
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,6 +17,7 @@
  */
 
 #include "user_db.h"
+#include "sp_exception.h"
 #include "seeks_proxy.h"
 #include "proxy_configuration.h"
 #include "plugin_manager.h"
@@ -58,6 +59,7 @@ namespace sp
   user_db::user_db(const bool &local,
                    const std::string &haddr,
                    const int &hport,
+                   const std::string &hpath,
                    const std::string &rsc)
     :_opened(false),_rsc(rsc)
   {
@@ -65,21 +67,25 @@ namespace sp
     mutex_init(&_db_mutex);
 
     // create the db.
-#if defined(TT)
+    //#if defined(TT)
     if (local)
-#endif
-      _hdb = new db_obj_local();
-#if defined(TT)
+      //#endif
+      {
+        _hdb = new db_obj_local();
+        _hdb->dbsetmutex();
+        static_cast<db_obj_local*>(_hdb)->dbtune(0,-1,-1,HDBTDEFLATE);
+      }
+    //#if defined(TT)
     else
       {
         if (haddr.empty())
           _hdb = new db_obj_remote(seeks_proxy::_config->_user_db_haddr,
                                    seeks_proxy::_config->_user_db_hport);
-        else _hdb = new db_obj_remote(haddr.c_str(),hport);
+        else _hdb = new db_obj_remote(haddr.c_str(),hport,hpath);
       }
-#endif
-    _hdb->dbsetmutex();
-    static_cast<db_obj_local*>(_hdb)->dbtune(0,-1,-1,HDBTDEFLATE);
+    //#endif
+    /*_hdb->dbsetmutex();
+      static_cast<db_obj_local*>(_hdb)->dbtune(0,-1,-1,HDBTDEFLATE);*/
 
     // db location.
     if (local && seeks_proxy::_config->_user_db_file.empty())
@@ -151,7 +157,6 @@ namespace sp
       }
 
     // try to get write access, if not, fall back to read-only access, with a warning.
-    //if (!tchdbopen(static_cast<db_obj_local*>(_hdb)->_hdb,_hdb->get_name().c_str(), HDBOWRITER | HDBOCREAT | HDBONOLCK))
     if (!_hdb->dbopen(HDBOWRITER | HDBOCREAT | HDBONOLCK))
       {
         int ecode = _hdb->dbecode();
@@ -196,6 +201,9 @@ namespace sp
 
   db_err user_db::close_db()
   {
+    if (_rsc == "sn")
+      return SP_ERR_OK;
+
     if (!_opened)
       {
         errlog::log_error(LOG_LEVEL_INFO,"user_db %s already closed", _hdb->get_name().c_str());
@@ -261,11 +269,11 @@ namespace sp
 
   bool user_db::is_remote() const
   {
-#if defined(TT)
+    //#if defined(TT)
     db_obj_remote *dbojr = dynamic_cast<db_obj_remote*>(_hdb);
     if (dbojr)
       return true;
-#endif
+    //#endif
     return false;
   }
 
@@ -707,6 +715,7 @@ namespace sp
       {
         std::string rec_pn,rec_key;
         std::string rkey_str = std::string((char*)rkey,rkey_size);
+        free(rkey);
         if (rkey_str != user_db::_db_version_key
             && user_db::extract_plugin_and_key(rkey_str,
                                                rec_pn,rec_key) != 0)
@@ -716,7 +725,6 @@ namespace sp
           }
         else if (rec_pn == plugin_name)
           n++;
-        free(rkey);
       }
     return n;
   }
@@ -870,13 +878,22 @@ namespace sp
                                       const std::string &plugin_name)
   {
     plugin *pl = plugin_manager::get_plugin("udb-service");
-    if (pl)
+    if (!pl)
       {
         errlog::log_error(LOG_LEVEL_ERROR,"cannot find udb-service plugin for remote user db call to a seeks node resource");
         return NULL;
       }
     db_obj_remote *dorj = static_cast<db_obj_remote*>(_hdb);
-    return udb_service::find_dbr_client(dorj->_host,dorj->_port,key,plugin_name);
+    db_record *dbr = NULL;
+    try
+      {
+        udb_service::find_dbr_client(dorj->_host,dorj->_port,dorj->_path,key,plugin_name);
+      }
+    catch (sp_exception &e)
+      {
+        // XXX: we should catch and report error to the high-level call.
+      }
+    return dbr;
   }
 
 } /* end of namespace. */

@@ -226,8 +226,9 @@ namespace seeks_plugins
 
       /**
        * \brief update recommended URLs.
+       * @return true if cached_snippets has changed, false otherwise.
        */
-      void update_recommended_urls();
+      bool update_recommended_urls();
 
     public:
       std::string _query; /**< clean query, no commands in it. */
@@ -275,7 +276,6 @@ namespace seeks_plugins
       sp_mutex_t _qc_mutex;
 
       /* search engines used in this context. */
-      //std::bitset<NSEs> _engines;
       feeds _engines;
 
       /* whether this context is registered or not. */
@@ -286,6 +286,18 @@ namespace seeks_plugins
 
       /* default language region. */
       static std::string _default_alang_reg;
+
+      /* number of peers influencing this context. */
+      uint32_t _npeers;
+
+      /* local personalization URL filter. */
+      hash_map<uint32_t,bool,id_hash_uint> *_lfilter;
+
+      /* feeds acquisition mutex for signaling. */
+      sp_mutex_t _feeds_ack_mutex;
+
+      /* feeds acquisition condition variable for signaling. */
+      sp_cond_t _feeds_ack_cond;
   };
 
 } /* end of namespace. */

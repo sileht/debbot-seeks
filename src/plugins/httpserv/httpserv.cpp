@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2010 Emmanuel Benazera, juban@free.fr
+ * Copyright (C) 2010-2011 Emmanuel Benazera, <ebenazer@seeks-project.info>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -34,6 +34,7 @@
 #if defined(PROTOBUF) && defined(TC)
 #include "query_capture.h"
 #include "cf.h"
+#include "udb_service.h"
 #endif
 
 #include <unistd.h>
@@ -93,8 +94,6 @@ namespace seeks_plugins
 
   httpserv::~httpserv()
   {
-    evhttp_free(_srv);
-    event_base_free(_evbase);
   }
 
   void httpserv::start()
@@ -119,6 +118,8 @@ namespace seeks_plugins
   void httpserv::stop()
   {
     event_base_loopbreak(_evbase);
+    evhttp_free(_srv);
+    event_base_free(_evbase);
   }
 
   void httpserv::init_callbacks()
@@ -137,6 +138,8 @@ namespace seeks_plugins
 #if defined(PROTOBUF) && defined(TC)
     evhttp_set_cb(_srv,"/qc_redir",&httpserv::qc_redir,NULL);
     evhttp_set_cb(_srv,"/tbd",&httpserv::tbd,NULL);
+    evhttp_set_cb(_srv,"/find_dbr",&httpserv::find_dbr,NULL);
+    evhttp_set_cb(_srv,"/find_bqc",&httpserv::find_bqc,NULL);
 #endif
 
     //evhttp_set_gencb(_srv,&httpserv::unknown_path,NULL); /* 404: catches all other resources. */
@@ -161,7 +164,8 @@ namespace seeks_plugins
                                   const std::string &error_message)
   {
     /* error output. */
-    errlog::log_error(LOG_LEVEL_ERROR,"httpserv error: %s",error_message.c_str());
+    errlog::log_error(LOG_LEVEL_ERROR,"httpserv error: code %d %s",
+                      http_code,error_message.c_str());
 
     // body.
     struct evbuffer *buffer;
@@ -214,7 +218,7 @@ namespace seeks_plugins
 
     const char *host = evhttp_find_header(r->input_headers, "host");
     if (host)
-      miscutil::enlist_unique_header(&csp._headers,"host",strdup(host));
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
 
     /* return requested file. */
     sp_err serr = websearch::cgi_websearch_hp(&csp,&rsp,&parameters);
@@ -241,7 +245,7 @@ namespace seeks_plugins
 
     const char *host = evhttp_find_header(r->input_headers, "host");
     if (host)
-      miscutil::enlist_unique_header(&csp._headers,"host",strdup(host));
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
 
     /* return requested file. */
     sp_err serr = websearch::cgi_websearch_search_hp_css(&csp,&rsp,&parameters);
@@ -264,7 +268,7 @@ namespace seeks_plugins
     hash_map<const char*,const char*,hash<const char*>,eqstr> parameters;
     const char *host = evhttp_find_header(r->input_headers, "host");
     if (host)
-      miscutil::enlist_unique_header(&csp._headers,"host",strdup(host));
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
 
     /* return requested file. */
     sp_err serr = websearch::cgi_websearch_search_css(&csp,&rsp,&parameters);
@@ -288,7 +292,7 @@ namespace seeks_plugins
 
     const char *host = evhttp_find_header(r->input_headers, "host");
     if (host)
-      miscutil::enlist_unique_header(&csp._headers,"host",strdup(host));
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
 
     /* return requested file. */
     sp_err serr = websearch::cgi_websearch_opensearch_xml(&csp,&rsp,&parameters);
@@ -312,7 +316,7 @@ namespace seeks_plugins
 
     const char *host = evhttp_find_header(r->input_headers, "host");
     if (host)
-      miscutil::enlist_unique_header(&csp._headers,"host",strdup(host));
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
 
     /* return requested information. */
     sp_err serr = websearch::cgi_websearch_node_info(&csp,&rsp,&parameters);
@@ -337,7 +341,7 @@ namespace seeks_plugins
 
     const char *host = evhttp_find_header(r->input_headers, "host");
     if (host)
-      miscutil::enlist_unique_header(&csp._headers,"host",strdup(host));
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
 
     /* return requested file. */
     std::string uri_str = std::string(r->uri);
@@ -423,11 +427,11 @@ namespace seeks_plugins
     /* fill up csp headers. */
     const char *rheader = evhttp_find_header(r->input_headers, "accept-language");
     if (rheader)
-      miscutil::enlist_unique_header(&csp._headers,"accept-language",strdup(rheader));
+      miscutil::enlist_unique_header(&csp._headers,"accept-language",rheader);
 
     const char *host = evhttp_find_header(r->input_headers, "host");
     if (host)
-      miscutil::enlist_unique_header(&csp._headers,"host",strdup(host));
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
 
     /* perform websearch. */
     sp_err serr = websearch::cgi_websearch_search(&csp,&rsp,parameters);
@@ -455,6 +459,8 @@ namespace seeks_plugins
           }
         else if (serr == WB_ERR_SE_CONNECT)
           {
+            if (rsp._body)
+              free(rsp._body);
             rsp._body = strdup("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/stric\
 t.dtd\"><html><head><title>408 - Seeks fail connection to background search engines </title></head><body></body></html>");
             code = 408;
@@ -518,11 +524,11 @@ t.dtd\"><html><head><title>408 - Seeks fail connection to background search engi
     /* fill up csp headers. */
     const char *rheader = evhttp_find_header(r->input_headers, "accept-language");
     if (rheader)
-      miscutil::enlist_unique_header(&csp._headers,"accept-language",strdup(rheader));
+      miscutil::enlist_unique_header(&csp._headers,"accept-language",rheader);
 
     const char *host = evhttp_find_header(r->input_headers, "host");
     if (host)
-      miscutil::enlist_unique_header(&csp._headers,"host",strdup(host));
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
 
     /* perform websearch. */
     sp_err serr = img_websearch::cgi_img_websearch_search(&csp,&rsp,parameters);
@@ -550,6 +556,8 @@ t.dtd\"><html><head><title>408 - Seeks fail connection to background search engi
           }
         else if (serr == WB_ERR_SE_CONNECT)
           {
+            if (rsp._body)
+              free(rsp._body);
             rsp._body = strdup("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/stric\
 t.dtd\"><html><head><title>408 - Seeks fail connection to background search engines </title></head><body></body></html>");
             code = 408;
@@ -634,7 +642,7 @@ t.dtd\"><html><head><title>408 - Seeks fail connection to background search engi
     // fill up csp headers.
     const char *referer = evhttp_find_header(r->input_headers, "referer");
     if (referer)
-      miscutil::enlist_unique_header(&csp._headers,"referer",strdup(referer));
+      miscutil::enlist_unique_header(&csp._headers,"referer",referer);
 
     // call for capture callback.
     char *urlp = NULL;
@@ -694,13 +702,13 @@ t.dtd\"><html><head><title>408 - Seeks fail connection to background search engi
     // fill up csp headers.
     const char *referer = evhttp_find_header(r->input_headers, "referer");
     if (referer)
-      miscutil::enlist_unique_header(&csp._headers,"referer",strdup(referer));
+      miscutil::enlist_unique_header(&csp._headers,"referer",referer);
     const char *baseurl = evhttp_find_header(r->input_headers, "seeks-remote-location");
     if (baseurl)
-      miscutil::enlist_unique_header(&csp._headers,"seeks-remote-location",strdup(referer));
+      miscutil::enlist_unique_header(&csp._headers,"seeks-remote-location",referer);
     const char *host = evhttp_find_header(r->input_headers, "host");
     if (host)
-      miscutil::enlist_unique_header(&csp._headers,"host",strdup(host));
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
 
     // call for capture callback.
     sp_err serr = cf::cgi_tbd(&csp,&rsp,parameters);
@@ -755,6 +763,239 @@ t.dtd\"><html><head><title>408 - Seeks fail connection to background search engi
     /* run the sweeper, for timed out query contexts. */
     sweeper::sweep();
   }
+
+  void httpserv::find_dbr(struct evhttp_request *r, void *arg)
+  {
+    client_state csp;
+    csp._config = seeks_proxy::_config;
+    http_response rsp;
+    hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters = NULL;
+
+    /* parse query. */
+    const char *uri_str = r->uri;
+    if (uri_str)
+      {
+        std::string uri = std::string(r->uri);
+        parameters = httpserv::parse_query(uri);
+      }
+    if (!parameters || !uri_str)
+      {
+        // send 400 error response.
+        if (parameters)
+          miscutil::free_map(parameters);
+        httpserv::reply_with_error_400(r);
+        return;
+      }
+
+    // fill up csp headers.
+    const char *referer = evhttp_find_header(r->input_headers, "referer");
+    if (referer)
+      miscutil::enlist_unique_header(&csp._headers,"referer",referer);
+    const char *baseurl = evhttp_find_header(r->input_headers, "seeks-remote-location");
+    if (baseurl)
+      miscutil::enlist_unique_header(&csp._headers,"seeks-remote-location",referer);
+    const char *host = evhttp_find_header(r->input_headers, "host");
+    if (host)
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
+
+    // call to find_dbr callback.
+    sp_err serr = udb_service::cgi_find_dbr(&csp,&rsp,parameters);
+    miscutil::free_map(parameters);
+    miscutil::list_remove_all(&csp._headers);
+
+    int code = 200;
+    std::string status = "OK";
+    std::string err_msg;
+    if (serr != SP_ERR_OK && serr != DB_ERR_NO_REC)
+      {
+        status = "ERROR";
+        if (serr == SP_ERR_CGI_PARAMS)
+          {
+            cgi::cgi_error_bad_param(&csp,&rsp);
+            err_msg = "Bad Parameter";
+            code = 400;
+          }
+        else if (serr == SP_ERR_MEMORY)
+          {
+            http_response *crsp = cgi::cgi_error_memory();
+            rsp = *crsp;
+            delete crsp;
+            err_msg = "Memory Error";
+            code = 500;
+          }
+        else
+          {
+            cgi::cgi_error_unknown(&csp,&rsp,serr);
+            code = 500;
+          }
+      }
+
+    /* fill up response. */
+    std::string ct = "text/html"; // default content-type.
+    std::list<const char*>::const_iterator lit = rsp._headers.begin();
+    while (lit!=rsp._headers.end())
+      {
+        if (miscutil::strncmpic((*lit),"content-type:",13) == 0)
+          {
+            ct = std::string((*lit));
+            ct = ct.substr(14);
+            break;
+          }
+        ++lit;
+      }
+    std::string content;
+    if (rsp._body && serr != DB_ERR_NO_REC)
+      content = std::string(rsp._body,rsp._content_length); // XXX: beware of length.
+
+    if (status == "OK")
+      httpserv::reply_with_body(r,code,"OK",content,ct);
+    else httpserv::reply_with_error(r,code,err_msg.c_str(),content);
+
+    /* run the sweeper, for timed out query contexts. */
+    sweeper::sweep();
+  }
+
+  void httpserv::find_bqc(struct evhttp_request *r, void *arg)
+  {
+    client_state csp;
+    csp._config = seeks_proxy::_config;
+    http_response rsp;
+    hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters = NULL;
+
+    /* check that we're getting a proper POST request. */
+#ifdef HAVE_LEVENT1
+    if (r->type != EVHTTP_REQ_POST)
+#else
+    if (evhttp_request_get_command(r) != EVHTTP_REQ_POST)
+#endif
+      {
+        httpserv::reply_with_error_400(r); //TODO: proper error type.
+        return;
+      }
+
+    /* parse query. */
+    const char *uri_str = r->uri;
+    if (uri_str)
+      {
+        std::string uri = std::string(r->uri);
+        parameters = httpserv::parse_query(uri);
+      }
+    if (!parameters || !uri_str)
+      {
+        // send 400 error response.
+        if (parameters)
+          miscutil::free_map(parameters);
+        httpserv::reply_with_error_400(r);
+        return;
+      }
+
+    /* grab POST content. */
+#ifdef HAVE_LEVENT1
+    evbuffer *input_buffer = r->input_buffer;
+#else
+    evbuffer *input_buffer = evhttp_request_get_input_buffer(r);
+#endif
+    if (!input_buffer)
+      {
+        httpserv::reply_with_error_400(r); //TODO: proper error type.
+        return;
+      }
+
+#if !defined(HAVE_LEVENT1)
+    std::string post_content;
+    while (evbuffer_get_length(input_buffer))
+      {
+        int n;
+        char cbuf[128];
+        n = evbuffer_remove(input_buffer, cbuf, sizeof(input_buffer)-1);
+        post_content += std::string(cbuf,n);
+      }
+#else
+    std::string post_content = std::string((char*)input_buffer->buffer,
+                                           input_buffer->off / sizeof(u_char));
+#endif
+
+    if (post_content.empty())
+      {
+        httpserv::reply_with_error_400(r); //TODO: proper error type.
+        return;
+      }
+    size_t post_content_size = post_content.length() * sizeof(char);
+    csp._iob._cur = new char[post_content_size+1];
+    strlcpy(csp._iob._cur,post_content.c_str(),post_content_size+1);
+    csp._iob._size = post_content_size+1;
+
+    // fill up csp headers.
+    const char *referer = evhttp_find_header(r->input_headers, "referer");
+    if (referer)
+      miscutil::enlist_unique_header(&csp._headers,"referer",referer);
+    const char *baseurl = evhttp_find_header(r->input_headers, "seeks-remote-location");
+    if (baseurl)
+      miscutil::enlist_unique_header(&csp._headers,"seeks-remote-location",referer);
+    const char *host = evhttp_find_header(r->input_headers, "host");
+    if (host)
+      miscutil::enlist_unique_header(&csp._headers,"host",host);
+
+    // call to find_bqc callback.
+    sp_err serr = udb_service::cgi_find_bqc(&csp,&rsp,parameters);
+    miscutil::free_map(parameters);
+    miscutil::list_remove_all(&csp._headers);
+    delete[] csp._iob._cur;
+    csp._iob._cur = NULL;
+    csp._iob._size = 0;
+
+    int code = 200;
+    std::string status = "OK";
+    std::string err_msg;
+    if (serr != SP_ERR_OK && serr != DB_ERR_NO_REC)
+      {
+        status = "ERROR";
+        if (serr == SP_ERR_CGI_PARAMS)
+          {
+            cgi::cgi_error_bad_param(&csp,&rsp);
+            err_msg = "Bad Parameter";
+            code = 400;
+          }
+        else if (serr == SP_ERR_MEMORY)
+          {
+            http_response *crsp = cgi::cgi_error_memory();
+            rsp = *crsp;
+            delete crsp;
+            err_msg = "Memory Error";
+            code = 500;
+          }
+        else
+          {
+            cgi::cgi_error_unknown(&csp,&rsp,serr);
+            code = 500;
+          }
+      }
+
+    /* fill up response. */
+    std::string ct = "text/html"; // default content-type.
+    std::list<const char*>::const_iterator lit = rsp._headers.begin();
+    while (lit!=rsp._headers.end())
+      {
+        if (miscutil::strncmpic((*lit),"content-type:",13) == 0)
+          {
+            ct = std::string((*lit));
+            ct = ct.substr(14);
+            break;
+          }
+        ++lit;
+      }
+    std::string content;
+    if (rsp._body && serr != DB_ERR_NO_REC)
+      content = std::string(rsp._body,rsp._content_length); // XXX: beware of length.
+
+    if (status == "OK")
+      httpserv::reply_with_body(r,code,"OK",content,ct);
+    else httpserv::reply_with_error(r,code,err_msg.c_str(),content);
+
+    /* run the sweeper, for timed out query contexts. */
+    sweeper::sweep();
+  }
+
 #endif
 
   void httpserv::unknown_path(struct evhttp_request *r, void *arg)

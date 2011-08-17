@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2010 Emmanuel Benazera, juban@free.fr
+ * Copyright (C) 2010-2011 Emmanuel Benazera <ebenazer@seeks-project.info>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -20,6 +20,7 @@
 #define CF_CONFIGURATION_H
 
 #include "configuration_spec.h"
+#include "peer_list.h"
 
 using sp::configuration_spec;
 
@@ -44,6 +45,10 @@ namespace seeks_plugins
       // main options.
       float _domain_name_weight; /**< weight given to domain names. */
       int _record_cache_timeout; /**< timeout on cached remote records, in seconds. */
+      peer_list *_pl; /**< list of peers for collaborative filtering. */
+      peer_list *_dpl; /**< list of dead peers, used in operations, to check/uncheck dead peers from the list. */
+      int _dead_peer_check; /**< interval of time between two dead peer checks. */
+      short _dead_peer_retries; /**< number of retries before marking a peer as dead. */
 
       static cf_configuration *_config;
   };

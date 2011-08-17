@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2010 Emmanuel Benazera, ebenazer@seeks-project.info
+ * Copyright (C) 2010-2011 Emmanuel Benazera, ebenazer@seeks-project.info
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -22,6 +22,7 @@
 #include "sp_exception.h"
 #include "plugin.h"
 #include "search_snippet.h"
+#include "db_query_record.h"
 
 using namespace sp;
 
@@ -46,28 +47,25 @@ namespace seeks_plugins
       static sp_err tbd(const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters,
                         std::string &url, std::string &query, std::string &lang);
 
-      void personalize(const std::string &query,
-                       const std::string &lang,
-                       std::vector<search_snippet*> &snippets,
-                       std::multimap<double,std::string,std::less<double> > &related_queries,
-                       hash_map<uint32_t,search_snippet*,id_hash_uint> &reco_snippets,
-                       const std::string &host="",
-                       const int &port=-1) throw (sp_exception);
+      void personalize(query_context *qc);
 
       void estimate_ranks(const std::string &query,
                           const std::string &lang,
+                          const uint32_t &expansion,
                           std::vector<search_snippet*> &snippets,
                           const std::string &host="",
                           const int &port=-1) throw (sp_exception);
 
       void get_related_queries(const std::string &query,
                                const std::string &lang,
+                               const uint32_t &expansion,
                                std::multimap<double,std::string,std::less<double> > &related_queries,
                                const std::string &host="",
                                const int &port=-1) throw (sp_exception);
 
       void get_recommended_urls(const std::string &query,
                                 const std::string &lang,
+                                const uint32_t &expansion,
                                 hash_map<uint32_t,search_snippet*,id_hash_uint> &snippets,
                                 const std::string &host="",
                                 const int &port=-1) throw (sp_exception);
@@ -75,6 +73,10 @@ namespace seeks_plugins
       static void thumb_down_url(const std::string &query,
                                  const std::string &lang,
                                  const std::string &url) throw (sp_exception);
+
+      static void find_bqc_cb(const std::vector<std::string> &qhashes,
+                              const uint32_t &expansion,
+                              db_query_record *&dbr);
 
     public:
       static plugin *_uc_plugin;

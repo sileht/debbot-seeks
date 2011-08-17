@@ -24,6 +24,8 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include <iostream>
+
 using sp::sweeper;
 using sp::miscutil;
 using sp::errlog;
@@ -45,7 +47,8 @@ namespace seeks_plugins
   {
     // remove from cache object and destroy record.
     _cache->remove(_key);
-    delete _rec;
+    if (_rec)
+      delete _rec;
     if (_cache->_records.empty())
       delete _cache;
   }
@@ -89,7 +92,8 @@ namespace seeks_plugins
     if ((hit=_records.find(key.c_str()))!=_records.end())
       {
         // update existing record with new one.
-        // Beware as old record is 'sweepable' so a call to unregister_sweepable.
+        // Beware as old record is 'sweepable', a call to unregister_sweepable
+        // may be under way.
         cached_record *cro = (*hit).second;
         sweeper::unregister_sweepable(cro);
         mutex_unlock(&_cache_mutex);
@@ -139,10 +143,11 @@ namespace seeks_plugins
 
   void cr_store::add(const std::string &host,
                      const int &port,
+                     const std::string &path,
                      const std::string &key,
                      db_record *rec)
   {
-    std::string peer = cr_store::generate_peer(host,port);
+    std::string peer = cr_store::generate_peer(host,port,path);
     add(peer,key,rec);
   }
 
@@ -167,9 +172,10 @@ namespace seeks_plugins
   }
 
   void cr_store::remove(const std::string &host,
-                        const int &port)
+                        const int &port,
+                        const std::string &path)
   {
-    std::string peer = cr_store::generate_peer(host,port);
+    std::string peer = cr_store::generate_peer(host,port,path);
     remove(peer);
   }
 
@@ -187,14 +193,17 @@ namespace seeks_plugins
 
   db_record* cr_store::find(const std::string &host,
                             const int &port,
-                            const std::string &key)
+                            const std::string &path,
+                            const std::string &key,
+                            bool &has_key)
   {
-    std::string peer = cr_store::generate_peer(host,port);
-    return find(peer,key);
+    std::string peer = cr_store::generate_peer(host,port,path);
+    return find(peer,key,has_key);
   }
 
   db_record* cr_store::find(const std::string &peer,
-                            const std::string &key)
+                            const std::string &key,
+                            bool &has_key)
   {
     mutex_lock(&_store_mutex);
     hash_map<const char*,cr_cache*,hash<const char*>,eqstr>::const_iterator hit;
@@ -202,20 +211,30 @@ namespace seeks_plugins
       {
         cr_cache *crc = (*hit).second;
         cached_record *cr = crc->find(key);
-        cr->update_last_use();
         mutex_unlock(&_store_mutex);
         if (!cr)
-          return NULL;
-        else return cr->_rec;
+          {
+            has_key = false;
+            mutex_unlock(&_store_mutex);
+            return NULL;
+          }
+        has_key = true;
+        cr->update_last_use();
+        mutex_unlock(&_store_mutex);
+        return cr->_rec;
       }
+    has_key = false;
     mutex_unlock(&_store_mutex);
     return NULL;
   }
 
   std::string cr_store::generate_peer(const std::string &host,
-                                      const int &port)
+                                      const int &port,
+                                      const std::string &path)
   {
-    return host + ":" + miscutil::to_string(port);
+    if (port != -1)
+      return host + ":" + miscutil::to_string(port) + path;
+    else return host + path;
   }
 
 } /* end of namespace. */

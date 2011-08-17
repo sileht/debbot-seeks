@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2009, 2010 Emmanuel Benazera, juban@free.fr
+ * Copyright (C) 2009-2011 Emmanuel Benazera, ebenazer@seeks-project.info
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -111,6 +111,7 @@ namespace seeks_plugins
     public:
       search_snippet();
       search_snippet(const short &rank);
+      search_snippet(const search_snippet *s);
 
       virtual ~search_snippet();
 
@@ -182,6 +183,9 @@ namespace seeks_plugins
       // merging of snippets (merge s2 into s2, according to certain rules).
       static void merge_snippets(search_snippet *s1, const search_snippet *s2);
 
+      // merging of snippets peer-related data.
+      static void merge_peer_data(search_snippet *s1, const search_snippet *s2);
+
       // hack for correcting meta rank after Bing and Yahoo merged their results in
       // the US.
       void bing_yahoo_us_merge();
@@ -243,6 +247,12 @@ namespace seeks_plugins
       // temporary flag used for marking snippets for which the
       // personalization system has found ranking information in local dataset.
       bool _personalized;
+
+      // number of peers influencing this snippet.
+      uint32_t _npeers;
+
+      // number of collaborative 'hits' for this snippet.
+      uint32_t _hits;
   };
 
 } /* end of namespace. */
