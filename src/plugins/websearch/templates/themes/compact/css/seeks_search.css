@@ -28,8 +28,6 @@ body {
 	padding: 5px 10px 5px 20px;
 	
 	width: 100%;
-	/*background-color: #cacaca;*/
-	/*background-image: url(base-url/plugins/websearch/public/themes/compact/images/gradient1.png);*/
 	background-color:white;
 	border-bottom: 2px solid #999999;
   min-width: 890px;
@@ -96,6 +94,24 @@ body {
 	height: 21px;
 }
 
+#search_info {
+    position: fixed;
+    margin-top: 65px;
+    margin-left: 20px;
+    top: -5px;
+    left: 0px;
+    height: 30px;
+    width: 100%;
+    background-color:white;
+    /*border-bottom: 1px solid #999999;*/
+ }
+
+#search_info .info {
+    margin-top: 5px;
+    margin-left: 10px;
+    color: gray;
+}
+
 #search_results {
 	padding-left: 10px;
 	text-align: left;
@@ -154,6 +170,11 @@ body {
 	margin-left: 0px;
         background-repeat: no-repeat;
 	background-position: left center;
+}
+
+#search_results .search_snippet .snippet_info {
+    font-size: 10px;
+    color: gray;
 }
 
 #search_results .search_snippet .search_engine a {
@@ -407,7 +428,7 @@ body {
 	background-image: url(base-url/plugins/websearch/public/themes/compact/images/home_32x30.png);
 }*/
 
-#search_page_current, #search_page_current_top {
+#search_page_current_bottom, #search_page_current_top {
 	padding: 10px;
 	text-align:center;
 }

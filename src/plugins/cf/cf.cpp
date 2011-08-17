@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2010 Emmanuel Benazera, ebenazer@seeks-project.info
+ * Copyright (C) 2010-2011 Emmanuel Benazera, ebenazer@seeks-project.info
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -145,45 +145,42 @@ namespace seeks_plugins
     return SP_ERR_OK;
   }
 
-  void cf::personalize(const std::string &query,
-                       const std::string &lang,
-                       std::vector<search_snippet*> &snippets,
-                       std::multimap<double,std::string,std::less<double> > &related_queries,
-                       hash_map<uint32_t,search_snippet*,id_hash_uint> &reco_snippets,
-                       const std::string &host,
-                       const int &port) throw (sp_exception)
+  void cf::personalize(query_context *qc)
   {
     simple_re sre;
-    sre.personalize(query,lang,snippets,related_queries,reco_snippets,host,port);
+    sre.peers_personalize(qc);
   }
 
   void cf::estimate_ranks(const std::string &query,
                           const std::string &lang,
+                          const uint32_t &expansion,
                           std::vector<search_snippet*> &snippets,
                           const std::string &host,
                           const int &port) throw (sp_exception)
   {
     simple_re sre; // estimator.
-    sre.estimate_ranks(query,lang,snippets,host,port);
+    sre.estimate_ranks(query,lang,expansion,snippets,host,port);
   }
 
   void cf::get_related_queries(const std::string &query,
                                const std::string &lang,
+                               const uint32_t &expansion,
                                std::multimap<double,std::string,std::less<double> > &related_queries,
                                const std::string &host,
                                const int &port) throw (sp_exception)
   {
-    query_recommender::recommend_queries(query,lang,related_queries,host,port);
+    query_recommender::recommend_queries(query,lang,expansion,related_queries,host,port);
   }
 
   void cf::get_recommended_urls(const std::string &query,
                                 const std::string &lang,
+                                const uint32_t &expansion,
                                 hash_map<uint32_t,search_snippet*,id_hash_uint> &snippets,
                                 const std::string &host,
                                 const int &port) throw (sp_exception)
   {
     simple_re sre; // estimator.
-    sre.recommend_urls(query,lang,snippets,host,port);
+    sre.recommend_urls(query,lang,expansion,snippets,host,port);
   }
 
   void cf::thumb_down_url(const std::string &query,
@@ -192,6 +189,23 @@ namespace seeks_plugins
   {
     simple_re sre; // estimator.
     sre.thumb_down_url(query,lang,url);
+  }
+
+  void cf::find_bqc_cb(const std::vector<std::string> &qhashes,
+                       const uint32_t &expansion,
+                       db_query_record *&dbr)
+  {
+    hash_map<const DHTKey*,db_record*,hash<const DHTKey*>,eqdhtkey> records;
+    rank_estimator::fetch_user_db_record(qhashes,
+                                         seeks_proxy::_user_db,
+                                         records);
+    std::string query,lang;
+    hash_map<const char*,query_data*,hash<const char*>,eqstr> qdata;
+    rank_estimator::extract_queries(query,lang,expansion,seeks_proxy::_user_db,records,qdata);
+    if (!qdata.empty())
+      dbr = new db_query_record(qdata); // no copy.
+    else dbr = NULL;
+    rank_estimator::destroy_records(records);
   }
 
   /* plugin registration. */

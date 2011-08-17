@@ -69,7 +69,9 @@ TEST(CRTest,cr_record)
   crs.add(cr_store::generate_peer(hosts[0],ports[0]),key,rec);
   ASSERT_EQ(1,crs._store.size());
   ASSERT_EQ(1,seeks_proxy::_memory_dust.size());
-  db_record *rec_f = crs.find(cr_store::generate_peer(hosts[0],ports[0]),key);
+  bool has_key = false;
+  db_record *rec_f = crs.find(cr_store::generate_peer(hosts[0],ports[0]),key,has_key);
+  ASSERT_TRUE(has_key);
   ASSERT_TRUE(rec == rec_f);
   sweeper::sweep_all(); // delete cr and unregister from dust.
   ASSERT_TRUE(crs._store.empty());
@@ -90,7 +92,7 @@ TEST(CRTest,find_dbr)
   seeks_proxy::_config = new proxy_configuration(seeks_proxy::_configfile);
   plugin_manager::_plugin_repository = basedir + "/plugins/";
   plugin_manager::load_all_plugins();
-  plugin_manager::instanciate_plugins();
+  plugin_manager::start_plugins();
 
   // access to plugins.
   plugin *pl = plugin_manager::get_plugin("query-capture");
@@ -114,9 +116,9 @@ TEST(CRTest,find_dbr)
     }
 
   // test find_dbr based on cr_store.
-  seeks_proxy::_user_db = NULL;
   std::string key = "1645a6897e62417931f26bcbdf4687c9c026b626";
-  db_record *dbr = rank_estimator::find_dbr(&udb,key,"query-capture");
+  bool in_store = false;
+  db_record *dbr = rank_estimator::find_dbr(&udb,key,"query-capture",in_store);
   ASSERT_TRUE(NULL!=dbr);
   db_query_record *dqr = dynamic_cast<db_query_record*>(dbr);
   ASSERT_TRUE(NULL!=dqr);
@@ -125,7 +127,10 @@ TEST(CRTest,find_dbr)
   ASSERT_TRUE(NULL!=qd);
   ASSERT_EQ("seeks",qd->_query);
   ASSERT_EQ(2,qd->_visited_urls->size());
-  db_record *dbr2 = rank_estimator::find_dbr(&udb,key,"query-capture");
+  std::string rkey = user_db::generate_rkey(key,"query-capture");
+  rank_estimator::_store.add(host,-1,"",rkey,dbr);
+  user_db udbr(false,host,-1,"","sn");
+  db_record *dbr2 = rank_estimator::find_dbr(&udbr,key,"query-capture",in_store);
   ASSERT_EQ(dbr,dbr2);
   ASSERT_EQ(1,rank_estimator::_store._store.size());
 

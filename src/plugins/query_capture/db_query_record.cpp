@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2010 Emmanuel Benazera, ebenazer@seeks-project.info
+ * Copyright (C) 2010-2011 Emmanuel Benazera, ebenazer@seeks-project.info
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -28,11 +28,17 @@
 #include "query_capture_configuration.h" // idem.
 using lsh::qprocess;
 
+#include "uri_capture.h"
+
 #include <algorithm>
 #include <iterator>
 #include <iostream>
+#include <sstream>
 
 #include <iconv.h>
+
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/gzip_stream.h>
 
 using sp::errlog;
 using sp::miscutil;
@@ -52,11 +58,14 @@ namespace seeks_plugins
                          const short &radius,
                          const std::string &url,
                          const short &hits,
-                         const short &url_hits)
+                         const short &url_hits,
+                         const std::string &title,
+                         const std::string &summary,
+                         const uint32_t &url_date)
     :_query(query),_radius(radius),_hits(hits),_record_key(NULL)
   {
     _visited_urls = new hash_map<const char*,vurl_data*,hash<const char*>,eqstr>(1);
-    vurl_data *vd = new vurl_data(url,url_hits);
+    vurl_data *vd = new vurl_data(url,url_hits,title,summary,url_date);
     add_vurl(vd);
   }
 
@@ -205,24 +214,30 @@ namespace seeks_plugins
                                    const short &radius,
                                    const std::string &url,
                                    const short &hits,
-                                   const short &url_hits)
+                                   const short &url_hits,
+                                   const std::string &title,
+                                   const std::string &summary,
+                                   const uint32_t &url_date)
     :db_record(plugin_name)
   {
-    query_data *qd = new query_data(query,radius,url,hits,url_hits);
+    query_data *qd = new query_data(query,radius,url,hits,url_hits,title,summary,url_date);
     _related_queries.insert(std::pair<const char*,query_data*>(qd->_query.c_str(),qd));
+  }
+
+  db_query_record::db_query_record(const hash_map<const char*,query_data*,hash<const char*>,eqstr> &rq)
+  {
+    hash_map<const char*,query_data*,hash<const char*>,eqstr>::const_iterator hit
+    = rq.begin();
+    while(hit!=rq.end())
+      {
+        _related_queries.insert(std::pair<const char*,query_data*>((*hit).second->_query.c_str(),(*hit).second));
+        ++hit;
+      }
   }
 
   db_query_record::db_query_record(const db_query_record &dbr)
   {
-    hash_map<const char*,query_data*,hash<const char*>,eqstr>::const_iterator hit
-    = dbr._related_queries.begin();
-    while (hit!=dbr._related_queries.end())
-      {
-        query_data *rd = (*hit).second;
-        query_data *crd = new query_data(*rd);
-        _related_queries.insert(std::pair<const char*,query_data*>(crd->_query.c_str(),crd));
-        ++hit;
-      }
+    db_query_record::copy_related_queries(dbr._related_queries,_related_queries);
   }
 
   db_query_record::db_query_record()
@@ -264,6 +279,39 @@ namespace seeks_plugins
       {
         errlog::log_error(LOG_LEVEL_ERROR,"Failed deserializing db_query_record");
         return 1; // error.
+      }
+    read_query_record(r);
+    return 0;
+  }
+
+  int db_query_record::serialize_compressed(std::string &msg) const
+  {
+    sp::db::record r;
+    create_query_record(r);
+    std::string tmp;
+    if (!r.SerializeToString(&tmp))
+      {
+        errlog::log_error(LOG_LEVEL_ERROR,"Failed serializing db_query_record to gzip stream");
+        return 1; // error.
+      }
+    ::google::protobuf::io::StringOutputStream zoss(&msg);
+    ::google::protobuf::io::GzipOutputStream gzos(&zoss);
+    ::google::protobuf::io::CodedOutputStream cos(&gzos);
+    cos.WriteString(tmp);
+    return 0;
+  }
+
+  int db_query_record::deserialize_compressed(const std::string &msg)
+  {
+    sp::db::record r;
+    std::istringstream iss(msg,std::istringstream::out);
+    ::google::protobuf::io::IstreamInputStream ziss(&iss);
+    ::google::protobuf::io::GzipInputStream gzis(&ziss);
+    if (!r.ParseFromZeroCopyStream(&gzis))
+      {
+        errlog::log_error(LOG_LEVEL_ERROR,"Failed deserializing db_query_record from gzip_stream");
+        // try uncompressed deserialization.
+        return deserialize(msg);
       }
     read_query_record(r);
     return 0;
@@ -323,6 +371,12 @@ namespace seeks_plugins
                     sp::db::visited_url *rq_vurl = rq_vurls->add_vurl();
                     rq_vurl->set_url(vd->_url);
                     rq_vurl->set_hits(vd->_hits);
+                    if (!vd->_title.empty())
+                      {
+                        rq_vurl->set_title(vd->_title);
+                        rq_vurl->set_summary(vd->_summary);
+                        rq_vurl->set_url_date(vd->_url_date);
+                      }
                   }
                 else std::cerr << "[Debug]: null vurl_data element in visited_urls...\n";
                 ++vhit;
@@ -353,10 +407,27 @@ namespace seeks_plugins
             sp::db::visited_url *rq_vurl = rq_vurls->mutable_vurl(j);
             std::string url = rq_vurl->url();
             short uhits = rq_vurl->hits();
-            vurl_data *vd = new vurl_data(url,uhits);
+            std::string title = rq_vurl->title();
+            std::string summary = rq_vurl->summary();
+            uint32_t date = rq_vurl->url_date();
+            vurl_data *vd = new vurl_data(url,uhits,title,summary,date);
             rd->_visited_urls->insert(std::pair<const char*,vurl_data*>(vd->_url.c_str(),vd));
           }
         _related_queries.insert(std::pair<const char*,query_data*>(rd->_query.c_str(),rd));
+      }
+  }
+
+  void db_query_record::copy_related_queries(const hash_map<const char*,query_data*,hash<const char*>,eqstr> &rq,
+      hash_map<const char*,query_data*,hash<const char*>,eqstr> &nrq)
+  {
+    hash_map<const char*,query_data*,hash<const char*>,eqstr>::const_iterator hit
+    = rq.begin();
+    while (hit!=rq.end())
+      {
+        query_data *rd = (*hit).second;
+        query_data *crd = new query_data(rd);
+        nrq.insert(std::pair<const char*,query_data*>(crd->_query.c_str(),crd));
+        ++hit;
       }
   }
 
@@ -602,5 +673,47 @@ namespace seeks_plugins
 
     return dumped_queries;
   }
+
+  void db_query_record::fetch_url_titles(uint32_t &fetched_urls,
+                                         const long &timeout,
+                                         const std::vector<std::list<const char*>*> *headers)
+  {
+    std::vector<vurl_data*> to_insert;
+    hash_map<const char*,query_data*,hash<const char*>,eqstr>::iterator hit
+    = _related_queries.begin();
+    while (hit!=_related_queries.end())
+      {
+        query_data *qd = (*hit).second;
+
+        if (!qd->_visited_urls)
+          {
+            ++hit;
+            continue;
+          }
+
+        hash_map<const char*,vurl_data*,hash<const char*>,eqstr>::iterator vit
+        = qd->_visited_urls->begin();
+        while(vit!=qd->_visited_urls->end())
+          {
+            vurl_data *vd = (*vit).second;
+            if (vd->_title.empty())
+              {
+                std::vector<std::string> titles;
+                std::vector<std::string> uris;
+                uris.push_back(vd->_url);
+                errlog::log_error(LOG_LEVEL_DEBUG,"fetching uri: %s",vd->_url.c_str());
+                uc_err ferr = uri_capture::fetch_uri_html_title(uris,titles,timeout,headers);
+                if (ferr == SP_ERR_OK)
+                  {
+                    fetched_urls++;
+                    vd->_title = titles.at(0);
+                  }
+              }
+            ++vit;
+          }
+        ++hit;
+      }
+  }
+
 
 } /* end of namespace. */

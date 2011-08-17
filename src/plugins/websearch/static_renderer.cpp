@@ -75,6 +75,7 @@ namespace seeks_plugins
   {
     if (!qc->_suggestions.empty())
       {
+        std::string used_rqueries = miscutil::to_string(qc->_suggestions.size());
         const char *base_url = miscutil::lookup(exports,"base-url");
         std::string base_url_str = "";
         if (base_url)
@@ -89,6 +90,8 @@ namespace seeks_plugins
             std::string suggested_q_str = (*mit).second;
             char *sugg_html_enc = encode::html_encode(suggested_q_str.c_str());
             std::string sugg_html_enc_str = std::string(sugg_html_enc);
+            if (sugg_html_enc_str.size() > 45)
+              sugg_html_enc_str =sugg_html_enc_str.substr(0,42) + "...";
             free(sugg_html_enc);
             char *sugg_url_enc = encode::url_encode(suggested_q_str.c_str());
             std::string sugg_url_enc_str = std::string(sugg_url_enc);
@@ -106,8 +109,14 @@ namespace seeks_plugins
               break;
           }
         miscutil::add_map_entry(exports,"$xxsugg",1,suggestion_str.c_str(),1);
+        miscutil::add_map_entry(exports,"$xxrqueries",1,used_rqueries.c_str(),1);
       }
-    else miscutil::add_map_entry(exports,"$xxsugg",1,strdup(""),0);
+    else
+      {
+        miscutil::add_map_entry(exports,"$xxsugg",1,strdup(""),0);
+        miscutil::add_map_entry(exports,"$xxrqueries",1,strdup("0"),0);
+      }
+    miscutil::add_map_entry(exports,"$xxnpeers",1,miscutil::to_string(qc->_npeers).c_str(),1);
   }
 
   void static_renderer::render_recommendations(const query_context *qc,
@@ -520,7 +529,7 @@ namespace seeks_plugins
 
     std::string label_query = url_encoded_query + "+" + clabel_url_enc_str;
     std::string html_label = "<h2><a class=\"label\" href=\"" + base_url_str + cgi_base + "q=" + label_query
-                             + "&amp;page=1&amp;expansion=1&amp;action=expand&ui=stat\">" + clabel_html_enc_str
+                             + "&amp;page=1&amp;expansion=1&amp;action=expand&amp;ui=stat\">" + clabel_html_enc_str
                              + "</a><font size=\"2\"> " + slabel_html_enc_str + "</font></h2><br><ol>";
     return html_label;
   }

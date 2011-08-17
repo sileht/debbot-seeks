@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2009 Emmanuel Benazera, juban@free.fr
+ * Copyright (C) 2009-2011 Emmanuel Benazera, ebenazer@seeks-project.info
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -51,9 +51,9 @@ namespace sp
                        const long &connect_timeout_ms,
                        const long &transfer_timeout_sec,
                        const long &transfer_timeout_ms)
-      :_nrequests(nrequests),_connect_timeout_sec(connect_timeout_sec),
-      _connect_timeout_ms(connect_timeout_ms),_transfer_timeout_sec(transfer_timeout_sec),
-      _transfer_timeout_ms(transfer_timeout_ms)
+    :_nrequests(nrequests),_connect_timeout_sec(connect_timeout_sec),
+     _connect_timeout_ms(connect_timeout_ms),_transfer_timeout_sec(transfer_timeout_sec),
+     _transfer_timeout_ms(transfer_timeout_ms)
   {
     _outputs = new std::string*[_nrequests];
     for (int i=0; i<_nrequests; i++)
@@ -79,6 +79,7 @@ namespace sp
       {
         curl = curl_easy_init();
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+        curl_easy_setopt(curl, CURLOPT_MAXREDIRS,5);
         curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0); // do not check on SSL certificate.
       }
@@ -95,9 +96,18 @@ namespace sp
 
     if (!arg->_proxy_addr.empty())
       {
-        //std::string proxy_str = seeks_proxy::_config->_haddr;
         std::string proxy_str = arg->_proxy_addr + ":" + miscutil::to_string(arg->_proxy_port);//+ miscutil::to_string(seeks_proxy::_config->_hport);
         curl_easy_setopt(curl, CURLOPT_PROXY, proxy_str.c_str());
+      }
+
+    if (arg->_content) // POST request.
+      {
+        curl_easy_setopt(curl, CURLOPT_POST, 1);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, (void*)arg->_content->c_str());
+        if (arg->_content_size >= 0)
+          curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, arg->_content_size);
+        /*std::cerr << "curl_mget POST size: " << arg->_content_size << std::endl
+          << "content: " << *arg->_content << std::endl;*/
       }
 
     struct curl_slist *slist=NULL;
@@ -111,6 +121,11 @@ namespace sp
             slist = curl_slist_append(slist,(*sit));
             ++sit;
           }
+        if (arg->_content)
+          {
+            slist = curl_slist_append(slist,strdup(arg->_content_type.c_str()));
+            slist = curl_slist_append(slist,strdup("Expect:"));
+          }
       }
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 
@@ -122,6 +137,7 @@ namespace sp
         int status = curl_easy_perform(curl);
         if (status != 0)  // an error occurred.
           {
+            arg->_status = status;
             errlog::log_error(LOG_LEVEL_ERROR, "curl error: %s", errorbuffer);
 
             if (arg->_output)
@@ -133,6 +149,7 @@ namespace sp
       }
     catch (std::exception &e)
       {
+        arg->_status = -1;
         errlog::log_error(LOG_LEVEL_ERROR, "Error %s in fetching remote data with curl.", e.what());
         if (arg->_output)
           {
@@ -142,6 +159,7 @@ namespace sp
       }
     catch (...)
       {
+        arg->_status = -2;
         if (arg->_output)
           {
             delete arg->_output;
@@ -161,8 +179,13 @@ namespace sp
   std::string** curl_mget::www_mget(const std::vector<std::string> &urls, const int &nrequests,
                                     const std::vector<std::list<const char*>*> *headers,
                                     const std::string &proxy_addr, const short &proxy_port,
+                                    std::vector<int> &status,
                                     std::vector<CURL*> *chandlers,
-                                    std::vector<std::string> *cookies)
+                                    std::vector<std::string> *cookies,
+                                    const bool &post,
+                                    std::string *content,
+                                    const int &content_size,
+                                    const std::string &content_type)
   {
     assert((int)urls.size() == nrequests); // check.
 
@@ -185,6 +208,11 @@ namespace sp
           arg_cbget->_handler = chandlers->at(i);
         if (cookies)
           arg_cbget->_cookies = cookies->at(i);
+        if (content)
+          {
+            arg_cbget->_content = content;
+            arg_cbget->_content_size = content_size;
+          }
         _cbgets[i] = arg_cbget;
 
         int error = pthread_create(&tid[i],
@@ -193,20 +221,19 @@ namespace sp
                                    (void *)arg_cbget);
 
         if (error != 0)
-          std::cout << "Couldn't run thread number " << i << ", errno " << error << std::endl;
-        //else std::cout << "Thread " << i << ", gets " << urls[i] << std::endl;
+          errlog::log_error(LOG_LEVEL_ERROR,"Couldn't run thread number %g",i,", errno %g",error);
       }
 
     /* now wait for all threads to terminate */
     for (int i=0; i<nrequests; i++)
       {
         int error = pthread_join(tid[i], NULL);
-        //std::cout << "Thread " << i << " terminated\n";
       }
 
     for (int i=0; i<nrequests; i++)
       {
         _outputs[i] = _cbgets[i]->_output;
+        status.push_back(_cbgets[i]->_status);
         delete _cbgets[i];
       }
 

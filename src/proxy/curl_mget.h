@@ -30,7 +30,8 @@ namespace sp
   typedef struct _cbget
   {
     _cbget()
-        :_url(NULL),_output(NULL),_proxy_port(0),_headers(NULL),_handler(NULL)
+      :_url(NULL),_output(NULL),_proxy_port(0),_headers(NULL),_status(0),_handler(NULL),
+       _content(NULL),_content_size(-1)
     {};
 
     ~_cbget()
@@ -44,8 +45,12 @@ namespace sp
     std::string _proxy_addr;
     short _proxy_port;
     const std::list<const char*> *_headers; // forced http headers
+    int _status;
     CURL *_handler; // optional
     std::string _cookies; // optional
+    std::string *_content; // optional
+    int _content_size; // optional
+    std::string _content_type; // optional.
   } cbget;
 
   void* pull_one_url(void *arg_cbget);
@@ -65,8 +70,13 @@ namespace sp
       std::string** www_mget(const std::vector<std::string> &urls, const int &nrequests,
                              const std::vector<std::list<const char*>*> *headers,
                              const std::string &proxy_addr, const short &proxy_port,
+                             std::vector<int> &status,
                              std::vector<CURL*> *chandlers=NULL,
-                             std::vector<std::string> *cookies=NULL);
+                             std::vector<std::string> *cookies=NULL,
+                             const bool &post=false,
+                             std::string *content=NULL,
+                             const int &content_size=-1,
+                             const std::string &content_type="");
 
     public:
       int _nrequests;

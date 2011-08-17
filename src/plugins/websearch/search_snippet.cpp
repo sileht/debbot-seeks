@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2009, 2010 Emmanuel Benazera, juban@free.fr
+ * Copyright (C) 2009-2011 Emmanuel Benazera, juban@free.fr
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -61,14 +61,35 @@ namespace seeks_plugins
 
   search_snippet::search_snippet()
     :_qc(NULL),_new(true),_id(0),_sim_back(false),_rank(0),_seeks_ir(0.0),_meta_rank(0),_seeks_rank(0),_doc_type(WEBPAGE),
-     _cached_content(NULL),_features(NULL),_features_tfidf(NULL),_bag_of_words(NULL),_safe(true),_personalized(false)
+     _cached_content(NULL),_features(NULL),_features_tfidf(NULL),_bag_of_words(NULL),_safe(true),_personalized(false),_npeers(0),_hits(0)
   {
   }
 
   search_snippet::search_snippet(const short &rank)
     :_qc(NULL),_new(true),_id(0),_sim_back(false),_rank(rank),_seeks_ir(0.0),_meta_rank(0),_seeks_rank(0),_doc_type(WEBPAGE),
-     _cached_content(NULL),_features(NULL),_features_tfidf(NULL),_bag_of_words(NULL),_safe(true),_personalized(false)
+     _cached_content(NULL),_features(NULL),_features_tfidf(NULL),_bag_of_words(NULL),_safe(true),_personalized(false),_npeers(0),_hits(0)
   {
+  }
+
+  search_snippet::search_snippet(const search_snippet *s)
+    :_qc(s->_qc),_new(s->_new),_id(s->_id),_title(s->_title),_url(s->_url),_cite(s->_cite),
+     _cached(s->_cached),_summary(s->_summary),_summary_noenc(s->_summary_noenc),
+     _file_format(s->_file_format),_date(s->_date),_lang(s->_lang),
+     _archive(s->_archive),_sim_link(s->_sim_link),
+     _sim_back(s->_sim_back),_rank(s->_rank),_meta_rank(s->_meta_rank),
+     _seeks_rank(s->_seeks_rank),_engine(s->_engine),_doc_type(s->_doc_type),
+     _forum_thread_info(s->_forum_thread_info),_cached_content(NULL),
+     _features(NULL),_features_tfidf(NULL),_bag_of_words(NULL),_safe(s->_safe),_personalized(s->_personalized),
+     _npeers(s->_npeers),_hits(s->_hits)
+  {
+    if (s->_cached_content)
+      _cached_content = new std::string(*s->_cached_content);
+    if (s->_features)
+      _features = new std::vector<uint32_t>(*s->_features);
+    if (s->_features_tfidf)
+      _features_tfidf = new hash_map<uint32_t,float,id_hash_uint>(*s->_features_tfidf);
+    if (s->_bag_of_words)
+      _bag_of_words = new hash_map<uint32_t,std::string,id_hash_uint>(*s->_bag_of_words);
   }
 
   search_snippet::~search_snippet()
@@ -177,7 +198,7 @@ namespace seeks_plugins
             char *wenc = encode::url_encode(words.at(i).c_str());
             std::string rword = " " + words.at(i) + " ";
             std::string bold_str = "<span class=\"highlight\"><a href=\"" + base_url_str + "/search?q=" + _qc->_url_enc_query
-                                   + "+" + std::string(wenc) + "&page=1&expansion=1&action=expand&lang=" + _qc->_auto_lang + "&ui=stat\">" + rword + "</a></span>";
+                                   + "+" + std::string(wenc) + "&amp;page=1&amp;expansion=1&amp;action=expand&amp;lang=" + _qc->_auto_lang + "&amp;ui=stat\">" + rword + "</a></span>";
             free(wenc);
             miscutil::ci_replace_in_string(str,rword,bold_str);
           }
@@ -275,6 +296,10 @@ namespace seeks_plugins
       json_str += "yes";
     else json_str += "no";
     json_str += "\"";
+    if (_npeers > 0)
+      json_str += ",\"snpeers\":\"" + miscutil::to_string(_npeers) + "\"";
+    if (_hits > 0)
+      json_str += ",\"hits\":\"" + miscutil::to_string(_hits) + "\"";
     if (!_date.empty())
       json_str += ",\"date\":\"" + _date + "\"";
 
@@ -317,7 +342,7 @@ namespace seeks_plugins
         && query_capture_configuration::_config
         && query_capture_configuration::_config->_mode_intercept == "redirect")
       {
-        url = base_url_str + "/qc_redir?q=" + _qc->_url_enc_query + "&url=" + url_enc;
+        url = base_url_str + "/qc_redir?q=" + _qc->_url_enc_query + "&amp;url=" + url_enc;
       }
 #endif
 
@@ -361,14 +386,13 @@ namespace seeks_plugins
     html_content += url;
     html_content += "\">";
 
-    const char *title_enc = encode::html_encode(_title.c_str());
+    std::string title_enc = encode::html_decode(_title);
     html_content += title_enc;
-    free_const(title_enc);
     html_content += "</a>";
 
     std::string se_icon = "<span class=\"search_engine icon\" title=\"setitle\"><a href=\"" + base_url_str
-                          + "/search?q=@query@&page=1&expansion=1&action=expand&engines=seeng&lang"
-                          + _qc->_auto_lang + "&ui=stat\">&nbsp;</a></span>";
+                          + "/search?q=@query@&amp;page=1&amp;expansion=1&amp;action=expand&amp;engines=seeng&amp;lang="
+                          + _qc->_auto_lang + "&amp;ui=stat\">&nbsp;</a></span>";
     if (_engine.has_feed("google"))
       {
         std::string ggle_se_icon = se_icon;
@@ -644,11 +668,14 @@ namespace seeks_plugins
     if (_personalized)
       {
         html_content += "<a class=\"search_tbd\" title=\"reject personalized result\" href=\"" + base_url_str + "/tbd?q="
-                        + _qc->_url_enc_query + "&url=" + url_enc + "&action=expand&expansion=xxexp&ui=stat&engines=";
+                        + _qc->_url_enc_query + "&amp;url=" + url_enc + "&amp;action=expand&amp;expansion=xxexp&amp;ui=stat&amp;engines=";
         if (engines)
           html_content += std::string(engines);
         html_content += "&lang=" + _qc->_auto_lang;
         html_content += "\">&nbsp;</a>";
+        if (_hits > 0 && _npeers > 0)
+          html_content += "<br><div class=\"snippet_info\">" + miscutil::to_string(_hits)
+                          + " recommendation(s) by " + miscutil::to_string(_npeers) + " peer(s).</div>";
       }
 
     html_content += "</div></li>\n";
@@ -661,6 +688,8 @@ namespace seeks_plugins
 
   bool search_snippet::is_se_enabled(const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters)
   {
+    if (_personalized && _engine.has_feed("seeks"))
+      return true;
     feeds se_enabled;
     query_context::fillup_engines(parameters,se_enabled);
     feeds band = _engine.inter(se_enabled);
@@ -999,18 +1028,16 @@ namespace seeks_plugins
       {
         if (s1->_engine.equal(s2->_engine))
           return;
-        /*std::bitset<NSEs> setest = s1->_engine;
-        setest &= s2->_engine;
-        if (setest.count()>0)
-        	return;*/
       }
 
     // search engine rank.
     s1->_rank += s2->_rank;
 
     // search engine.
-    //s1->_engine |= s2->_engine;
     s1->_engine = s1->_engine.sunion(s2->_engine);
+
+    // seeks_rank
+    s1->_seeks_rank += s2->_seeks_rank;
 
     // cached link.
     if (s1->_cached.empty())
@@ -1034,7 +1061,7 @@ namespace seeks_plugins
     if (s1->_file_format.length() < s2->_file_format.length())  // we could do better here, ok enough for now.
       s1->_file_format = s2->_file_format;
 
-    // seeks rank.
+    // meta rank.
     if (s1->_doc_type == TWEET)
       {
         if (s1->_meta_rank <= 0)
@@ -1046,6 +1073,16 @@ namespace seeks_plugins
         s1->_meta_rank = s1->_engine.size();
         s1->bing_yahoo_us_merge();
       }
+  }
+
+  void search_snippet::merge_peer_data(search_snippet *s1,
+                                       const search_snippet *s2)
+  {
+    // hits.
+    s1->_hits += s2->_hits;
+
+    // peers.
+    s1->_npeers += s2->_npeers;
   }
 
   void search_snippet::bing_yahoo_us_merge()

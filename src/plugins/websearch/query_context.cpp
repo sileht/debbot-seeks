@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2009, 2010 Emmanuel Benazera, juban@free.fr
+ * Copyright (C) 2009-2011 Emmanuel Benazera <ebenazer@seeks-project.info>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -49,17 +49,21 @@ namespace seeks_plugins
 
   query_context::query_context()
     :sweepable(),_page_expansion(0),_lsh_ham(NULL),_ulsh_ham(NULL),_compute_tfidf_features(true),
-     _registered(false)
+     _registered(false),_npeers(0),_lfilter(NULL)
   {
     mutex_init(&_qc_mutex);
+    mutex_init(&_feeds_ack_mutex);
+    cond_init(&_feeds_ack_cond);
   }
 
   query_context::query_context(const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters,
                                const std::list<const char*> &http_headers)
     :sweepable(),_page_expansion(0),_blekko(false),_lsh_ham(NULL),_ulsh_ham(NULL),_compute_tfidf_features(true),
-     _registered(false)
+     _registered(false),_npeers(0),_lfilter(NULL)
   {
     mutex_init(&_qc_mutex);
+    mutex_init(&_feeds_ack_mutex);
+    cond_init(&_feeds_ack_cond);
 
     // reload config if file has changed.
     websearch::_wconfig->load_config();
@@ -150,6 +154,9 @@ namespace seeks_plugins
     for (std::list<const char*>::iterator lit=_useful_http_headers.begin();
          lit!=_useful_http_headers.end(); lit++)
       free_const((*lit));
+
+    if (_lfilter)
+      delete _lfilter;
   }
 
   std::string query_context::sort_query(const std::string &query)
@@ -281,16 +288,18 @@ namespace seeks_plugins
             feeds fint = _engines.diff(fdiff);
 
             // catch up expansion with the newly activated engines.
-            try
+            if (fint.size() > 1 || !fint.has_feed("seeks"))
               {
-                expand(csp,rsp,parameters,0,_page_expansion,fint);
+                try
+                  {
+                    expand(csp,rsp,parameters,0,_page_expansion,fint);
+                  }
+                catch (sp_exception &e)
+                  {
+                    expanded = false;
+                    throw e;
+                  }
               }
-            catch (sp_exception &e)
-              {
-                expanded = false;
-                throw e;
-              }
-
             expanded = true;
 
             // union engines & fint.
@@ -307,19 +316,21 @@ namespace seeks_plugins
       }
 
     // perform requested expansion.
-    try
+    if (_engines.size() > 1 || !_engines.has_feed("seeks"))
       {
-        if (!cache_check)
-          expand(csp,rsp,parameters,_page_expansion,horizon,_engines);
-        else if (strcasecmp(cache_check,"no") == 0)
-          expand(csp,rsp,parameters,0,horizon,_engines);
+        try
+          {
+            if (!cache_check)
+              expand(csp,rsp,parameters,_page_expansion,horizon,_engines);
+            else if (strcasecmp(cache_check,"no") == 0)
+              expand(csp,rsp,parameters,0,horizon,_engines);
+          }
+        catch (sp_exception &e)
+          {
+            expanded = false;
+            throw e;
+          }
       }
-    catch (sp_exception &e)
-      {
-        expanded = false;
-        throw e;
-      }
-
     expanded = true;
 
     // update horizon.
@@ -734,33 +745,63 @@ namespace seeks_plugins
     std::vector<search_snippet*>::iterator vit = _cached_snippets.begin();
     while (vit!=_cached_snippets.end())
       {
+        //std::cerr << "reviewing URL: " << (*vit)->_url << std::endl;
         if ((*vit)->_personalized)
           {
             (*vit)->_personalized = false;
-            if ((*vit)->_engine.has_feed("seeks"))
+            if ((*vit)->_engine.count() == 1
+                && (*vit)->_engine.has_feed("seeks"))
+              {
+                remove_from_unordered_cache((*vit)->_id);
+                delete (*vit);
+                vit = _cached_snippets.erase(vit);
+                continue;
+              }
+            else if ((*vit)->_engine.has_feed("seeks"))
               (*vit)->_engine.remove_feed("seeks");
             (*vit)->_meta_rank = (*vit)->_engine.size(); //TODO: wrong, every feed_parser may refer to several urls.
+            (*vit)->_seeks_rank = 0;
             (*vit)->bing_yahoo_us_merge();
+            (*vit)->_npeers = 0;
+            (*vit)->_hits = 0;
           }
+        else (*vit)->_seeks_rank = 0; // reset.
         ++vit;
       }
+    _npeers = 0; // reset query context peers.
   }
 
-  void query_context::update_recommended_urls()
+  bool query_context::update_recommended_urls()
   {
+    bool cache_changed = false;
     hash_map<uint32_t,search_snippet*,id_hash_uint>::iterator hit, hit2, cit;
     hit = _recommended_snippets.begin();
     while(hit!=_recommended_snippets.end())
       {
-        if ((cit = _unordered_snippets.find((*hit).first))!=_unordered_snippets.end())
+        cit = _unordered_snippets.find((*hit).first);
+        if (cit != _unordered_snippets.end())
           {
             hit2 = hit;
             ++hit;
             delete (*hit2).second;
             _recommended_snippets.erase(hit2);
           }
+        else if (!(*hit).second->_title.empty())
+          {
+            (*hit).second->_qc = this;
+            (*hit).second->_personalized = true;
+            (*hit).second->_engine.add_feed("seeks","s.s");
+            (*hit).second->_meta_rank++;
+            _cached_snippets.push_back((*hit).second);
+            //add_to_unordered_cache((*hit).second);
+            cache_changed = true;
+            hit2 = hit;
+            ++hit;
+            _recommended_snippets.erase(hit2);
+          }
         else ++hit;
       }
+    return cache_changed;
   }
 
 } /* end of namespace. */

@@ -75,7 +75,8 @@ am__installdirs = "$(DESTDIR)$(cfpluginlibdir)" \
 LTLIBRARIES = $(cfpluginlib_LTLIBRARIES)
 libcfplugin_la_LIBADD =
 am_libcfplugin_la_OBJECTS = cf.lo rank_estimators.lo \
-	query_recommender.lo cf_configuration.lo cr_store.lo
+	query_recommender.lo cf_configuration.lo cr_store.lo \
+	peer_list.lo
 libcfplugin_la_OBJECTS = $(am_libcfplugin_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -306,6 +307,7 @@ localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+opencv2 = @opencv2@
 opencv_CFLAGS = @opencv_CFLAGS@
 opencv_LIBS = @opencv_LIBS@
 pdfdir = @pdfdir@
@@ -335,14 +337,14 @@ cfpluginlibdir = $(libdir)/seeks/plugins/cf
 cfplugindatadir = $(datadir)/seeks/plugins/cf
 AM_CXXFLAGS = -Wall -g -pipe
 AM_CPPFLAGS = -I${srcdir} -I${srcdir}/../../utils -I${srcdir}/../../proxy -I${srcdir}/../../lsh -I${srcdir}/../../dht \
-            -I${srcdir}/../websearch -I${srcdir}/../query_capture -I${srcdir}/../uri_capture \
+            -I${srcdir}/../websearch -I${srcdir}/../query_capture -I${srcdir}/../uri_capture -I${srcdir}/../udb_service \
             -DSEEKS_CONFIGDIR='"$(sysconfdir)/seeks/"' `pkg-config --cflags protobuf` `pkg-config --cflags tokyocabinet` \
             @PCRE_CFLAGS@ -I../../proxy/
 
 ACLOCAL_AMFLAGS = -I m4
 cfpluginlib_LTLIBRARIES = libcfplugin.la
-libcfplugin_la_SOURCES = cf.cpp rank_estimators.cpp query_recommender.cpp cf_configuration.cpp cr_store.cpp \
-                       cf.h rank_estimators.h query_recommender.h cf_configuration.h cr_store.h
+libcfplugin_la_SOURCES = cf.cpp rank_estimators.cpp query_recommender.cpp cf_configuration.cpp cr_store.cpp peer_list.cpp \
+                       cf.h rank_estimators.h query_recommender.h cf_configuration.h cr_store.h peer_list.h
 
 cfpluginconfigdir = $(sysconfdir)/seeks
 dist_cfpluginconfig_DATA = cf-config
@@ -424,6 +426,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cf_configuration.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cr_store.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/peer_list.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/query_recommender.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rank_estimators.Plo@am__quote@
 

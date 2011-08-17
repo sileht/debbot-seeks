@@ -33,6 +33,9 @@ namespace seeks_plugins
       static db_err find_dbr_cb(const char *key_str, const char *pn_str,
                                 http_response *rsp);
 
+      static db_err find_bqc_cb(const std::string &content,
+                                http_response *rsp);
+
       // other cb come here.
   };
 

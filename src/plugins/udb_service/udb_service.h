@@ -42,8 +42,13 @@ namespace seeks_plugins
                                  http_response *rsp,
                                  const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters);
 
+      static db_err cgi_find_bqc(client_state *csp,
+                                 http_response *rsp,
+                                 const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters);
+
       static db_record* find_dbr_client(const std::string &host,
                                         const int &port,
+                                        const std::string &path,
                                         const std::string &key,
                                         const std::string &pn);
   };

@@ -115,10 +115,6 @@ namespace sp
       &cgisimple::cgi_send_error_favicon,
       NULL, TRUE /* Sends the favicon image for error pages. */
     ),
-    cgi_dispatcher( "robots.txt",
-    &cgisimple::cgi_robots_txt,
-    NULL, TRUE /* Sends a robots.txt file to tell robots to go away. */
-                  ),
     cgi_dispatcher( "send-banner",
     &cgisimple::cgi_send_banner,
     NULL, TRUE /* Send a built-in image */
@@ -410,10 +406,16 @@ namespace sp
     if (*query_args_start == '/')
       {
         *query_args_start++ = '\0';
-        if ((param_list = new hash_map<const char*,const char*,hash<const char*>,eqstr>()))
+        try
           {
-            miscutil::add_map_entry(param_list, "file", 1,
-                                    encode::url_decode(query_args_start), 0);
+            if ((param_list = new hash_map<const char*,const char*,hash<const char*>,eqstr>()))
+              {
+                miscutil::add_map_entry(param_list, "file", 1,
+                                        encode::url_decode(query_args_start), 0);
+              }
+          }
+        catch (std::bad_alloc &e)
+          {
           }
       }
     else
@@ -437,10 +439,14 @@ namespace sp
      */
 
     /* Get mem for response or fail*/
-    if (NULL == (rsp = new http_response()))
+    try
+      {
+        rsp = new http_response();
+      }
+    catch (std::bad_alloc &e)
       {
         freez(path_copy);
-        delete param_list;
+        miscutil::free_map(param_list);
         return cgi::cgi_error_memory();
       }
 
@@ -493,6 +499,9 @@ namespace sp
         return cgi::dispatch(d, path_copy, csp, param_list, rsp);
       }
 
+    miscutil::free_map(param_list);
+    delete rsp;
+    freez(path_copy);
     return NULL; // beware.
   }
 
@@ -540,11 +549,21 @@ namespace sp
       }
     else if (err && !d->_plugin_name.empty())
       {
-        /* internal plugin error. */
-        errlog::log_error(LOG_LEVEL_ERROR,
-                          "%d in plugin %s caught in top-level handler",
-                          err, d->_plugin_name.c_str());
-        err = cgi::cgi_error_plugin(csp, rsp, err, d->_plugin_name);
+        /* list of filtered errors at proxy level. */
+        if (err == DB_ERR_NO_REC) // XXX: other errors to be avoided come here.
+          {
+            /* let's assume that it worked. */
+            rsp->_reason = RSP_REASON_CGI_CALL;
+            return cgi::finish_http_response(csp, rsp);
+          }
+        else
+          {
+            /* internal plugin error. */
+            errlog::log_error(LOG_LEVEL_ERROR,
+                              "%d in plugin %s caught in top-level handler",
+                              err, d->_plugin_name.c_str());
+            err = cgi::cgi_error_plugin(csp, rsp, err, d->_plugin_name);
+          }
       }
     else if (err && (err != SP_ERR_MEMORY))
       {
@@ -589,7 +608,11 @@ namespace sp
     int pairs, i;
     hash_map<const char*,const char*,hash<const char*>,eqstr> *cgi_params;
 
-    if (NULL == (cgi_params = new hash_map<const char*,const char*,hash<const char*>,eqstr>()))
+    try
+      {
+        cgi_params = new hash_map<const char*,const char*,hash<const char*>,eqstr>();
+      }
+    catch (std::bad_alloc &e)
       {
         return NULL;
       }
@@ -838,7 +861,11 @@ namespace sp
         return cgi::cgi_error_memory();
       }
 
-    if (NULL == (rsp = new http_response()))
+    try
+      {
+        rsp = new http_response();
+      }
+    catch (std::bad_alloc &e)
       {
         miscutil::free_map(exports);
         return cgi::cgi_error_memory();
@@ -860,7 +887,7 @@ namespace sp
       err = miscutil::add_map_entry(exports, "protocol", 1, csp->_http._ssl ? "https://" : "http://", 1);
     if (!err)
       {
-        err = miscutil::add_map_entry(exports, "host-ip", 1, encode::html_encode(csp->_http._host_ip_addr_str), 0);
+        err = miscutil::add_map_entry(exports, "host-ip", 1, encode::html_encode(csp->_http._host_ip_addr_str.c_str()), 0);
         if (err)
           {
             /* Some failures, like "404 no such domain", don't have an IP address. */
@@ -2149,9 +2176,14 @@ namespace sp
 
     assert(csp);
 
-    exports = new hash_map<const char*,const char*,hash<const char*>,eqstr>();
-    if (exports == NULL)
-      return NULL;
+    try
+      {
+        exports = new hash_map<const char*,const char*,hash<const char*>,eqstr>();
+      }
+    catch (std::bad_alloc &e)
+      {
+        return NULL;
+      }
 
     if (csp->_config->_hostname)
       {

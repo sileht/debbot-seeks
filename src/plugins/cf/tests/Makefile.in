@@ -33,7 +33,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = ut_cf_sre$(EXEEXT) ut_cr_store$(EXEEXT)
+check_PROGRAMS = ut_cf_sre$(EXEEXT) ut_cr_store$(EXEEXT) \
+	ut_peer_list$(EXEEXT)
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/src/Makefile.include
 @HAVE_PROTOBUF_TRUE@@HAVE_TC_TRUE@am__append_1 = \
@@ -97,6 +98,11 @@ ut_cr_store_OBJECTS = $(am_ut_cr_store_OBJECTS)
 ut_cr_store_LDADD = $(LDADD)
 ut_cr_store_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
+am_ut_peer_list_OBJECTS = ut-peer-list.$(OBJEXT)
+ut_peer_list_OBJECTS = $(am_ut_peer_list_OBJECTS)
+ut_peer_list_LDADD = $(LDADD)
+ut_peer_list_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -110,8 +116,10 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(ut_cf_sre_SOURCES) $(ut_cr_store_SOURCES)
-DIST_SOURCES = $(ut_cf_sre_SOURCES) $(ut_cr_store_SOURCES)
+SOURCES = $(ut_cf_sre_SOURCES) $(ut_cr_store_SOURCES) \
+	$(ut_peer_list_SOURCES)
+DIST_SOURCES = $(ut_cf_sre_SOURCES) $(ut_cr_store_SOURCES) \
+	$(ut_peer_list_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -280,6 +288,7 @@ localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+opencv2 = @opencv2@
 opencv_CFLAGS = @opencv_CFLAGS@
 opencv_LIBS = @opencv_LIBS@
 pdfdir = @pdfdir@
@@ -308,6 +317,7 @@ with_gtest = @with_gtest@
 TESTS = $(check_PROGRAMS)
 ut_cf_sre_SOURCES = ut-cf-sre.cpp
 ut_cr_store_SOURCES = ut-cr-store.cpp
+ut_peer_list_SOURCES = ut-peer-list.cpp
 AM_CPPFLAGS = $(am__append_1) $(am__append_4) $(am__append_6) \
 	$(am__append_8) -Wall -g -Wno-deprecated -pipe -I${srcdir} \
 	-I${srcdir}/.. -I${top_srcdir}/src/dht -I${top_srcdir}/src/lsh \
@@ -374,6 +384,9 @@ ut_cf_sre$(EXEEXT): $(ut_cf_sre_OBJECTS) $(ut_cf_sre_DEPENDENCIES)
 ut_cr_store$(EXEEXT): $(ut_cr_store_OBJECTS) $(ut_cr_store_DEPENDENCIES) 
 	@rm -f ut_cr_store$(EXEEXT)
 	$(CXXLINK) $(ut_cr_store_OBJECTS) $(ut_cr_store_LDADD) $(LIBS)
+ut_peer_list$(EXEEXT): $(ut_peer_list_OBJECTS) $(ut_peer_list_DEPENDENCIES) 
+	@rm -f ut_peer_list$(EXEEXT)
+	$(CXXLINK) $(ut_peer_list_OBJECTS) $(ut_peer_list_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -383,6 +396,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ut-cf-sre.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ut-cr-store.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ut-peer-list.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

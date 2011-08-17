@@ -1,6 +1,6 @@
 /**
  * The Seeks proxy and plugin framework are part of the SEEKS project.
- * Copyright (C) 2010 Emmanuel Benazera, ebenazer@seeks-project.info
+ * Copyright (C) 2010-2011 Emmanuel Benazera, ebenazer@seeks-project.info
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,7 @@
 using sp::user_db;
 
 #include <vector>
+#include <list>
 
 using sp::db_record;
 using dht::DHTKey;
@@ -38,16 +39,21 @@ namespace seeks_plugins
   {
     public:
       vurl_data(const std::string &url)
-        :_url(url),_hits(1)
+        :_url(url),_hits(1),_url_date(0)
       {};
 
       vurl_data(const std::string &url,
-                const short &hits)
-        :_url(url),_hits(hits)
+                const short &hits,
+                const std::string &title="",
+                const std::string &summary="",
+                const uint32_t &url_date=0)
+        :_url(url),_hits(hits),_title(title),
+         _summary(summary),_url_date(url_date)
       {};
 
       vurl_data(const vurl_data *vd)
-        :_url(vd->_url),_hits(vd->_hits)
+        :_url(vd->_url),_hits(vd->_hits),_title(vd->_title),
+         _summary(vd->_summary),_url_date(vd->_url_date)
       {};
 
       ~vurl_data() {};
@@ -55,10 +61,27 @@ namespace seeks_plugins
       void merge(const vurl_data *vd)
       {
         _hits += vd->_hits;
+
+        // update of title and summary.
+        if (_title.empty())
+          {
+            _title = vd->_title;
+            _summary = vd->_summary;
+          }
+        else if (!vd->_title.empty()
+                 && (vd->_url_date == 0
+                     || vd->_url_date > _url_date))
+          {
+            _title = vd->_title;
+            _summary = vd->_summary;
+          }
       };
 
       std::string _url;
       short _hits;
+      std::string _title;
+      std::string _summary;
+      uint32_t _url_date;
   };
 
   class query_data
@@ -71,7 +94,10 @@ namespace seeks_plugins
                  const short &radius,
                  const std::string &url,
                  const short &hits=1,
-                 const short &url_hits=1);
+                 const short &url_hits=1,
+                 const std::string &title="",
+                 const std::string &summary="",
+                 const uint32_t &url_date=0);
 
       query_data(const query_data *qd);
 
@@ -109,7 +135,12 @@ namespace seeks_plugins
                       const short &radius,
                       const std::string &url,
                       const short &hits=1,
-                      const short &url_hits=1);
+                      const short &url_hits=1,
+                      const std::string &title="",
+                      const std::string &summary="",
+                      const uint32_t &url_date=0);
+
+      db_query_record(const hash_map<const char*,query_data*,hash<const char*>,eqstr> &qdata);
 
       db_query_record(const db_query_record &dbr);
 
@@ -120,6 +151,10 @@ namespace seeks_plugins
       virtual int serialize(std::string &msg) const;
 
       virtual int deserialize(const std::string &msg);
+
+      virtual int serialize_compressed(std::string &msg) const;
+
+      virtual int deserialize_compressed(const std::string &msg);
 
       virtual db_err merge_with(const db_record &dqr);
 
@@ -134,6 +169,13 @@ namespace seeks_plugins
       int fix_issue_281(uint32_t &fixed_urls);
 
       int fix_issue_154(uint32_t &fixed_urls, uint32_t &fixed_queries, uint32_t &removed_urls);
+
+      void fetch_url_titles(uint32_t &fetched_urls,
+                            const long &timeout,
+                            const std::vector<std::list<const char*>*> *headers);
+
+      static void copy_related_queries(const hash_map<const char*,query_data*,hash<const char*>,eqstr> &rq,
+                                       hash_map<const char*,query_data*,hash<const char*>,eqstr> &nrq);
 
     public:
       hash_map<const char*,query_data*,hash<const char*>,eqstr> _related_queries;
