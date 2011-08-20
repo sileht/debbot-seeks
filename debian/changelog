@@ -1,3 +1,12 @@
+seeks (0.3.4-4) UNRELEASED; urgency=low
+
+  [ Mehdi ABAAKOUK ]
+  * Add gtest dep
+
+  [ Abaakouk Mehdi ]
+
+ -- Abaakouk Mehdi <theli48@gmail.com>  Sat, 20 Aug 2011 18:35:45 +0200
+
 seeks (0.3.4-3) UNRELEASED; urgency=low
 
   * Snapshot version 0.3.4
