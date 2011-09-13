@@ -1,3 +1,13 @@
+seeks (0.3.5a-1) UNRELEASED; urgency=low
+
+  [ Mehdi Abaakouk ]
+  * Add missing deps and update description
+  * Imported Upstream version 0.3.5a
+
+  [ Abaakouk Mehdi ]
+
+ -- Abaakouk Mehdi <theli48@gmail.com>  Tue, 13 Sep 2011 17:32:22 +0200
+
 seeks (0.3.5-2) UNRELEASED; urgency=low
 
   [ Mehdi Abaakouk ]
