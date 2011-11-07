@@ -26,6 +26,7 @@
 #include "interceptor_plugin.h"
 #include "action_plugin.h"
 #include "filter_plugin.h"
+#include "miscutil.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -231,7 +232,7 @@ namespace sp
           }
         else
           {
-            errlog::log_error(LOG_LEVEL_INFO, "registering CGI dispatcher %s", cgid->_name);
+            errlog::log_error(LOG_LEVEL_INFO, "%s: registering CGI dispatcher %s", p->get_name_cstr(),cgid->_name);
 
             cgid->_plugin_name = p->get_name();
             plugin_manager::_cgi_dispatchers.insert(std::pair<const char*,cgi_dispatcher*>(cgid->_name,cgid));
@@ -248,6 +249,21 @@ namespace sp
       return (*hit).second;
     else
       {
+        // iterate the resource until it is caught by the longest cgi resource in the queue.
+        // if not caught, error.
+        std::string path_str = path;
+        std::vector<std::string> tokens;
+        miscutil::tokenize(path_str,tokens,"/");
+        tokens.pop_back();
+        while(!tokens.empty())
+          {
+            std::string rsc = miscutil::join_string_list("/",tokens);
+            if ((hit = plugin_manager::_cgi_dispatchers.find(rsc.c_str()))
+                != plugin_manager::_cgi_dispatchers.end())
+              return (*hit).second;
+            tokens.pop_back();
+          }
+
         errlog::log_error(LOG_LEVEL_ERROR, "Can't find any plugin dispatcher in %s", path);
         return NULL;
       }

@@ -1,0 +1,59 @@
+'\" -*- coding: us-ascii -*-
+.if \n(.g .ds T< \\FC
+.if \n(.g .ds T> \\F[\n[.fam]]
+.de URL
+\\$2 \(la\\$1\(ra\\$3
+..
+.if \n(.g .mso www.tmac
+.TH seeks 1 2009-03-25 "" ""
+.SH NAME
+seeks \- seeks
+.SH SYNOPSIS
+'nh
+.fi
+.ad l
+\fBseeks\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[\fB--chroot\fR] [\fB--help\fR] [\fB--daemon\fR] [\fB--pidfile \fIpidfile\fB\fR] [\fB--pre-chroot-nslookup \fIhostname\fB\fR] [\fB--user \fIuser[.group]\fB\fR] [\fB--version\fR] [\fB--plugin-repository \fIdir\fB\fR] [\fB--data-repository \fIdir\fB\fR] [configfile]
+'in \n(.iu-\nxu
+.ad b
+'hy
+.SH DESCRIPTION
+Seeks is an open source:
+.PP
+* websearch proxy and meta-search engine,
+.PP
+* real-time p2p pattern matching network for social websearch. 
+.SH OPTIONS
+.TP 
+--help 
+show this help message and exit.
+.TP 
+--daemon 
+Run the server in the background. 
+.TP 
+--pidfile \fIpidfile\fR 
+On startup, write the process ID to pidfile. Delete the pidfile on exit. Failure to create or delete the pidfile is non-fatal. If no --pidfile option is given, no PID file will be used. 
+.TP 
+--chroot 
+Before changing to the user ID passed to the --user option, chroot to that user's home directory, i.e. make the kernel pretend to the seeks process that the directory tree starts there. If set up carefully, this can limit the impact of possible vulnerabilities in seeks to the files contained in that hierarchy. 
+.TP 
+--user \fIuser[.group]\fR 
+After (optionally) writing the PID file, assumes the user ID of user and the GID of group, or, if the optional group was not specified, the default group of the user. Exit if the privileges are not sufficient to do so. 
+.TP 
+--plugin-repository \fIdir\fR 
+Set the directories where the plugins are to be loaded from.
+.TP 
+--data-repository \fIdir\fR 
+Set the directories where the public data is to be loaded from.
+.TP 
+\fIconfigfile\fR 
+Seeks proxy configuration file.
+.SH FILES
+Default seeks configuration files:
+.PP
+/etc/seeks/config 
+/etc/seeks/websearch-config
+.SH COPYRIGHT
+This manual page was written by Abaakouk Mehdi

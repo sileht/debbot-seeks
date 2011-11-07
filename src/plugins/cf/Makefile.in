@@ -37,6 +37,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@HAVE_XSLSERIALIZER_PLUGIN_TRUE@am__append_1 = -I${srcdir}/../xsl_serializer @XML2_CFLAGS@
 subdir = src/plugins/cf
 DIST_COMMON = $(dist_cfpluginconfig_DATA) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -167,6 +168,7 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DOCBOOK = @DOCBOOK@
 DOXYGEN_PAPER_SIZE = @DOXYGEN_PAPER_SIZE@
 DSYMUTIL = @DSYMUTIL@
 DUMPBIN = @DUMPBIN@
@@ -251,6 +253,7 @@ PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PTHREAD_LDADD = @PTHREAD_LDADD@
 RANLIB = @RANLIB@
 SED = @SED@
 SEEKS_CODE_STATUS = @SEEKS_CODE_STATUS@
@@ -264,6 +267,9 @@ VERSION = @VERSION@
 XML2_CFLAGS = @XML2_CFLAGS@
 XML2_CONFIG = @XML2_CONFIG@
 XML2_LDADD = @XML2_LDADD@
+XSLT_CFLAGS = @XSLT_CFLAGS@
+XSLT_CONFIG = @XSLT_CONFIG@
+XSLT_LDADD = @XSLT_LDADD@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -287,7 +293,6 @@ builddir = @builddir@
 cf = @cf@
 datadir = @datadir@
 datarootdir = @datarootdir@
-docbook = @docbook@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -311,6 +316,7 @@ opencv2 = @opencv2@
 opencv_CFLAGS = @opencv_CFLAGS@
 opencv_LIBS = @opencv_LIBS@
 pdfdir = @pdfdir@
+personalization = @personalization@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 protobuf_CFLAGS = @protobuf_CFLAGS@
@@ -336,11 +342,14 @@ with_gtest = @with_gtest@
 cfpluginlibdir = $(libdir)/seeks/plugins/cf
 cfplugindatadir = $(datadir)/seeks/plugins/cf
 AM_CXXFLAGS = -Wall -g -pipe
-AM_CPPFLAGS = -I${srcdir} -I${srcdir}/../../utils -I${srcdir}/../../proxy -I${srcdir}/../../lsh -I${srcdir}/../../dht \
-            -I${srcdir}/../websearch -I${srcdir}/../query_capture -I${srcdir}/../uri_capture -I${srcdir}/../udb_service \
-            -DSEEKS_CONFIGDIR='"$(sysconfdir)/seeks/"' `pkg-config --cflags protobuf` `pkg-config --cflags tokyocabinet` \
-            @PCRE_CFLAGS@ -I../../proxy/
-
+AM_CPPFLAGS = -I${srcdir} -I${srcdir}/../../utils \
+	-I${srcdir}/../../proxy -I${srcdir}/../../lsh \
+	-I${srcdir}/../../dht -I${srcdir}/../websearch \
+	-I${srcdir}/../query_capture -I${srcdir}/../uri_capture \
+	-I${srcdir}/../udb_service \
+	-DSEEKS_CONFIGDIR='"$(sysconfdir)/seeks/"' `pkg-config \
+	--cflags protobuf` `pkg-config --cflags tokyocabinet` \
+	@PCRE_CFLAGS@ -I../../proxy/ $(am__append_1)
 ACLOCAL_AMFLAGS = -I m4
 cfpluginlib_LTLIBRARIES = libcfplugin.la
 libcfplugin_la_SOURCES = cf.cpp rank_estimators.cpp query_recommender.cpp cf_configuration.cpp cr_store.cpp peer_list.cpp \

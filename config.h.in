@@ -24,14 +24,14 @@
 /* "OpenCV library is there" */
 #undef FEATURE_OPENCV2
 
-/* "pthreads" */
-#undef FEATURE_PTHREAD
-
 /* "Enables statistics function" */
 #undef FEATURE_STATISTICS
 
 /* "Allow Seeks proxy to be disabled" */
 #undef FEATURE_TOGGLE
+
+/* "XSL serializer plugin available" */
+#undef FEATURE_XSLSERIALIZER_PLUGIN
 
 /* Define to 1 to use compression through the zlib library. */
 #undef FEATURE_ZLIB
