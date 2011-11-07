@@ -1,3 +1,12 @@
+seeks (0.4.0-RC2-1) UNRELEASED; urgency=low
+
+  [ Mehdi Abaakouk ]
+  * Imported Upstream version 0.4.0-RC2
+
+  [ Abaakouk Mehdi ]
+
+ -- Abaakouk Mehdi <theli48@gmail.com>  Mon, 07 Nov 2011 08:22:26 +0100
+
 seeks (0.3.5a-2) UNRELEASED; urgency=low
 
   * Snapshot version 0.3.5a
