@@ -3,7 +3,7 @@
  * It is based on Privoxy (http://www.privoxy.org), developped
  * by the Privoxy team.
  *
- * Copyright (C) 2009 Emmanuel Benazera, juban@free.fr
+ * Copyright (C) 2009-2011 Emmanuel Benazera <ebenazer@seeks-project.info>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -96,6 +96,7 @@ namespace sp
 #define hash_user_db_address               1000875927ul /* "user-db-address" */
 #define hash_user_db_check                 4124671137ul /* "user-db-startup-check" */
 #define hash_user_db_optimize              2686859753ul /* "user-db-optimize" */
+#define hash_user_db_large                 3056519964ul /* "user-db-large" */
 #define hash_url_source_code               1714992061ul /* "url-source-code" */
 
   proxy_configuration::proxy_configuration(const std::string &filename)
@@ -116,7 +117,8 @@ namespace sp
      _automatic_proxy_disable(true),
      _user_db_haddr(NULL),
      _user_db_startup_check(true),
-     _user_db_optimize(true)
+     _user_db_optimize(true),
+     _user_db_large(false)
   {
     load_config();
   }
@@ -177,6 +179,7 @@ namespace sp
     _user_db_hport = 0;
     _user_db_startup_check = true;
     _user_db_optimize = true;
+    _user_db_large = false;
     _url_source_code = "http://seeks.git.sourceforge.net/git/gitweb.cgi?p=seeks/seeks;a=tree";
   }
 
@@ -191,6 +194,7 @@ namespace sp
 #ifdef FEATURE_ACL
     access_control_list *cur_acl;
 #endif  /* def FEATURE_ACL */
+    hash_map<const char*,bool,hash<const char*>,eqstr>::iterator hit;
 
     switch (cmd_hash)
       {
@@ -198,7 +202,9 @@ namespace sp
          * activated_plugins
          * *************************************************************************/
       case hash_activated_plugins :
-        _activated_plugins.insert(std::pair<const char*,bool>(strdup(arg),true));
+        if ((hit=_activated_plugins.find(arg))==_activated_plugins.end())
+          _activated_plugins.insert(std::pair<const char*,bool>(strdup(arg),true));
+        else (*hit).second = true;
         configuration_spec::html_table_row(_config_args,cmd,arg,"Activated plugin");
         break;
 
@@ -723,18 +729,14 @@ namespace sp
       case hash_logfile :
         if (!seeks_proxy::_no_daemon)
           {
-            // TODO: check on seeks_proxy daemon flag.
-            if (!seeks_proxy::_no_daemon)
+            _logfile = seeks_proxy::make_path(_logdir, arg);
+            if (NULL == _logfile)
               {
-                _logfile = seeks_proxy::make_path(_logdir, arg);
-                if (NULL == _logfile)
-                  {
-                    errlog::log_error(LOG_LEVEL_FATAL, "Out of memory while creating logfile path");
-                  }
-                errlog::init_error_log(seeks_proxy::_Argv[0], _logfile);
+                errlog::log_error(LOG_LEVEL_FATAL, "Out of memory while creating logfile path");
               }
-            else errlog::disable_logging();
+            errlog::init_error_log(seeks_proxy::_Argv[0], _logfile);
           }
+        //else errlog::disable_logging();
         break;
 
         /*************************************************************************
@@ -876,6 +878,8 @@ namespace sp
                *************************************************************************/
       case hash_user_db_check:
         _user_db_startup_check = static_cast<bool>(atoi(arg));
+        configuration_spec::html_table_row(_config_args,cmd,arg,
+                                           "Whether to check the user db integrity at startup");
         break;
 
         /*************************************************************************
@@ -883,11 +887,22 @@ namespace sp
          *************************************************************************/
       case hash_user_db_optimize:
         _user_db_optimize = static_cast<bool>(atoi(arg));
+        configuration_spec::html_table_row(_config_args,cmd,arg,
+                                           "Whether to optimize the user db at startup and node stop");
         break;
 
         /*************************************************************************
-               * url-source-code URL to source code repository
+               * user-db-large 0 or 1
                *************************************************************************/
+      case hash_user_db_large:
+        _user_db_large = static_cast<bool>(atoi(arg));
+        configuration_spec::html_table_row(_config_args,cmd,arg,
+                                           "Whether to activate the support for user db > 2Gb");
+        break;
+
+        /*************************************************************************
+        * url-source-code URL to source code repository
+        *************************************************************************/
       case hash_url_source_code:
         _url_source_code = std::string(arg);
         break;

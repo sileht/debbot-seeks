@@ -21,6 +21,13 @@ AM_CPPFLAGS += `pkg-config --cflags tokyotyrant`
 endif
 endif
 
+if HAVE_XSLSERIALIZER_PLUGIN
+AM_CPPFLAGS += -I${srcdir}/../xsl_serializer
+endif
+if HAVE_OPENCV2
+AM_CPPFLAGS += `pkg-config opencv --cflags`
+endif
+
 ACLOCAL_AMFLAGS=-I m4
 websearchpluginlib_LTLIBRARIES=libseekswebsearchplugin.la
 libseekswebsearchplugin_la_SOURCES=websearch.cpp se_handler.cpp search_snippet.cpp static_renderer.cpp \
@@ -45,7 +52,7 @@ if USE_PERL
 libseekswebsearchplugin_la_CXXFLAGS += `perl -MExtUtils::Embed -e ccopts`
 endif
 
-SUBDIRS=. tests
+#SUBDIRS=. tests
 
 websearchconfigdir=$(sysconfdir)/seeks
 dist_websearchconfig_DATA=websearch-config

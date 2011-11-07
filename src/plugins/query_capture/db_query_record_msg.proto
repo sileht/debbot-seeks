@@ -9,6 +9,8 @@ message visited_url
  optional string title = 3; /* url title. */
  optional string summary = 4; /* snippet summary. */
  optional uint32 url_date = 5; /* URL data date. */
+ optional string url_lang = 6; /* URL language. */
+ optional uint32 rec_date = 7; /* record date, for recording activity. */
 }
 
 message visited_urls
@@ -31,5 +33,5 @@ message related_query
 
 extend sp.db.record
 {
- required related_queries queries = 4; /* original queries */
+ required related_queries queries = 20; /* original queries */
 }

@@ -27,6 +27,7 @@
 #include "query_capture_configuration.h"
 #include "DHTKey.h"
 #include "search_snippet.h"
+#include "user_db.h"
 
 using namespace sp;
 using dht::DHTKey;
@@ -47,6 +48,8 @@ namespace seeks_plugins
 
       time_t _last_sweep;
   };
+
+  class query_capture_element;
 
   class query_capture : public plugin
   {
@@ -73,8 +76,9 @@ namespace seeks_plugins
       int remove_all_query_records();
 
       static void store_queries(const std::string &query,
-                                const std::string &url, const std::string &host,
-                                const std::string &qlang="") throw (sp_exception);
+                                const query_context *qc,
+                                const std::string &url, const std::string &host
+                               ) throw (sp_exception);
 
       // store_query called from websearch plugin.
       void store_queries(const std::string &query) const throw (sp_exception);
@@ -84,36 +88,68 @@ namespace seeks_plugins
       static void process_url(std::string &url, std::string &host, std::string &path);
 
       static void process_get(std::string &get);
+
+      query_capture_element *_qelt;
   };
 
-  class query_capture_element : public interceptor_plugin
+  class query_capture_element
   {
     public:
-      query_capture_element(plugin *parent);
+      query_capture_element();
 
-      virtual ~query_capture_element();
+      ~query_capture_element();
 
-      virtual http_response* plugin_response(client_state *csp);
-
+      /**
+       * \brief stores queries halo along with a URL.
+       */
       static void store_queries(const std::string &query,
+                                const query_context *qc,
                                 const std::string &url, const std::string &host,
                                 const std::string &plugin_name,
-                                const std::string &qlang="") throw (sp_exception);
+                                const int &radius=-1) throw (sp_exception);
 
+      /**
+       * \brief stores queries halo alone.
+       */
       static void store_queries(const std::string &query,
-                                const std::string &plugin_name) throw (sp_exception);
+                                const std::string &plugin_name,
+                                const int &radius=-1) throw (sp_exception);
 
+      /**
+       * \brief removes a queries halo and all attached URLs.
+       */
+      static void remove_queries(const std::string &query,
+                                 const std::string &plugin_name,
+                                 const int &radius=-1) throw (sp_exception);
+
+      /**
+       * \brief store query alone.
+       */
       static void store_query(const DHTKey &key,
                               const std::string &query,
                               const uint32_t &radius,
                               const std::string &plugin_name) throw (sp_exception);
 
+      /**
+       * \brief removes query and attached URLs.
+       */
+      static void remove_query(const DHTKey &key,
+                               const std::string &query,
+                               const uint32_t &radius,
+                               const std::string &plugin_name) throw (sp_exception);
+
+      /**
+       * \brief store query and URL.
+       */
       static void store_url(const DHTKey &key, const std::string &query,
                             const std::string &url, const std::string &host,
                             const uint32_t &radius,
                             const std::string &plugin_name,
                             const search_snippet *sp=NULL) throw (sp_exception);
 
+      /**
+       * \brief removes a URL attached to a query.
+       */
       static void remove_url(const DHTKey &key, const std::string &query,
                              const std::string &url, const std::string &host,
                              const short &url_hits, const uint32_t &radius,

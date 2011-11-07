@@ -24,6 +24,7 @@
 #include "wb_err.h"
 #include "plugin.h"
 #include "search_snippet.h"
+#include "sort_rank.h"
 #include "query_context.h"
 #include "websearch_configuration.h"
 #include "miscutil.h"
@@ -60,6 +61,17 @@ namespace seeks_plugins
     bool _render;
   };
 
+  struct ws_thread_arg
+  {
+    ws_thread_arg(pers_arg *arg)
+      :_arg(arg),_done(false)
+    {
+    };
+
+    pers_arg *_arg;
+    bool _done;
+  };
+
   class websearch : public plugin
   {
     public:
@@ -87,9 +99,20 @@ namespace seeks_plugins
           http_response *rsp,
           const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters);
 
+      static sp_err cgi_websearch_node_info(client_state *csp, http_response *rsp,
+                                            const hash_map<const char*, const char*, hash<const char*>, eqstr> *parameters);
+
       static sp_err cgi_websearch_search(client_state *csp,
                                          http_response *rsp,
                                          const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters);
+
+      static sp_err cgi_websearch_words(client_state *csp,
+                                        http_response *rsp,
+                                        const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters);
+
+      static sp_err cgi_websearch_recent_queries(client_state *csp,
+          http_response *rsp,
+          const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters);
 
       static sp_err cgi_websearch_search_cache(client_state *csp,
           http_response *rsp,
@@ -110,21 +133,34 @@ namespace seeks_plugins
       static sp_err cgi_websearch_clusterize(client_state *csp, http_response *rsp,
                                              const hash_map<const char*, const char*, hash<const char*>, eqstr> *parameters);
 
-      static sp_err cgi_websearch_node_info(client_state *csp, http_response *rsp,
-                                            const hash_map<const char*, const char*, hash<const char*>, eqstr> *parameters);
-
       /* websearch. */
-      static void perform_action_threaded(wo_thread_arg *args);
+      /*static void perform_action_threaded(wo_thread_arg *args);
 
       static sp_err perform_action(client_state *csp,
                                    http_response *rsp,
                                    const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters,
-                                   bool render = true);
+                                   bool render = true);*/
+
+#if defined(PROTOBUF) && defined(TC)
+      static void *perform_websearch_threaded(ws_thread_arg *args);
+#endif
 
       static sp_err perform_websearch(client_state *csp,
                                       http_response *rsp,
                                       const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters,
                                       bool render=true);
+
+      static sp_err fetch_snippet(client_state *csp,
+                                  http_response *rsp,
+                                  const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters);
+
+      static sp_err words_query(client_state *csp,
+                                http_response *rsp,
+                                const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters);
+
+      static sp_err words_snippet(client_state *csp,
+                                  http_response *rsp,
+                                  const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters);
 
       static query_context* lookup_qc(const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters);
 
@@ -134,7 +170,8 @@ namespace seeks_plugins
       static std::string no_command_query(const std::string &oquery);
 
       static void preprocess_parameters(const hash_map<const char*, const char*, hash<const char*>, eqstr> *parameters,
-                                        client_state *csp) throw (sp_exception);
+                                        client_state *csp,
+                                        bool &has_lang) throw (sp_exception);
 
       /* error handling. */
       static sp_err failed_ses_connect(client_state *csp, http_response *rsp);
@@ -150,9 +187,11 @@ namespace seeks_plugins
       static bool _qc_plugin_activated;
       static plugin *_cf_plugin; /**< (collaborative) filtering plugin. */
       static bool _cf_plugin_activated;
+      static plugin *_xs_plugin; /**< xslt serialization plugin. */
+      static bool _xs_plugin_activated;
 
       /* multithreading. */
-    private:
+    public:
       static sp_mutex_t _context_mutex;
   };
 

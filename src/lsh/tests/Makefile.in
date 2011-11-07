@@ -56,28 +56,49 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 @HAVE_PROTOBUF_TRUE@@HAVE_TC_TRUE@	-lcfplugin \
 @HAVE_PROTOBUF_TRUE@@HAVE_TC_TRUE@	-ludbserviceplugin
 
-@HAVE_PROTOBUF_TRUE@am__append_4 = \
+@HAVE_IMG_WEBSEARCH_PLUGIN_TRUE@am__append_4 = \
+@HAVE_IMG_WEBSEARCH_PLUGIN_TRUE@	-I$(top_srcdir)/src/plugins/img_websearch \
+@HAVE_IMG_WEBSEARCH_PLUGIN_TRUE@	`pkg-config opencv --cflags`
+
+@HAVE_IMG_WEBSEARCH_PLUGIN_TRUE@am__append_5 = \
+@HAVE_IMG_WEBSEARCH_PLUGIN_TRUE@       -L$(top_builddir)/src/plugins/img_websearch \
+@HAVE_IMG_WEBSEARCH_PLUGIN_TRUE@       `pkg-config opencv --libs`
+
+@HAVE_IMG_WEBSEARCH_PLUGIN_TRUE@am__append_6 = \
+@HAVE_IMG_WEBSEARCH_PLUGIN_TRUE@       -lseeksimgwebsearchplugin
+
+@HAVE_PROTOBUF_TRUE@am__append_7 = \
 @HAVE_PROTOBUF_TRUE@	`pkg-config --cflags protobuf`
 
-@HAVE_PROTOBUF_TRUE@am__append_5 = \
+@HAVE_PROTOBUF_TRUE@am__append_8 = \
 @HAVE_PROTOBUF_TRUE@	`pkg-config --libs protobuf`
 
-@HAVE_PROTOBUF_TRUE@@HAVE_TC_TRUE@am__append_6 = \
+@HAVE_PROTOBUF_TRUE@@HAVE_TC_TRUE@am__append_9 = \
 @HAVE_PROTOBUF_TRUE@@HAVE_TC_TRUE@	`pkg-config --cflags tokyocabinet`
 
-@HAVE_PROTOBUF_TRUE@@HAVE_TC_TRUE@am__append_7 = \
+@HAVE_PROTOBUF_TRUE@@HAVE_TC_TRUE@am__append_10 = \
 @HAVE_PROTOBUF_TRUE@@HAVE_TC_TRUE@        `pkg-config --libs tokyocabinet`
 
-@HAVE_PROTOBUF_TRUE@@HAVE_TT_TRUE@am__append_8 = \
+@HAVE_PROTOBUF_TRUE@@HAVE_TT_TRUE@am__append_11 = \
 @HAVE_PROTOBUF_TRUE@@HAVE_TT_TRUE@        `pkg-config --cflags tokyotyrant`
 
-@HAVE_PROTOBUF_TRUE@@HAVE_TT_TRUE@am__append_9 = \
+@HAVE_PROTOBUF_TRUE@@HAVE_TT_TRUE@am__append_12 = \
 @HAVE_PROTOBUF_TRUE@@HAVE_TT_TRUE@      	   `pkg-config --libs tokyotyrant`
 
-@HAVE_PROTOBUF_TRUE@am__append_10 = \
+@HAVE_PROTOBUF_TRUE@am__append_13 = \
 @HAVE_PROTOBUF_TRUE@	-lseeksuserdb -lseeksuserdbfix
 
-@USE_PERL_TRUE@am__append_11 = `perl -MExtUtils::Embed -e ldopts`
+@USE_PERL_TRUE@am__append_14 = `perl -MExtUtils::Embed -e ldopts`
+@HAVE_XSLSERIALIZER_PLUGIN_TRUE@am__append_15 = -I${top_srcdir}/src/plugins/xsl_serializer \
+@HAVE_XSLSERIALIZER_PLUGIN_TRUE@     @XSLT_CFLAGS@ 
+
+@HAVE_XSLSERIALIZER_PLUGIN_TRUE@am__append_16 = \
+@HAVE_XSLSERIALIZER_PLUGIN_TRUE@	-L$(top_builddir)/src/plugins/xsl_serializer 
+
+@HAVE_XSLSERIALIZER_PLUGIN_TRUE@am__append_17 = \
+@HAVE_XSLSERIALIZER_PLUGIN_TRUE@      -lseeksxslserializerplugin \
+@HAVE_XSLSERIALIZER_PLUGIN_TRUE@      @XSLT_LDADD@
+
 subdir = src/lsh/tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -95,16 +116,19 @@ gen_mrf_query_160_OBJECTS = $(am_gen_mrf_query_160_OBJECTS)
 gen_mrf_query_160_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
 gen_mrf_query_160_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am_ut_mrf_OBJECTS = ut-mrf.$(OBJEXT)
 ut_mrf_OBJECTS = $(am_ut_mrf_OBJECTS)
 ut_mrf_LDADD = $(LDADD)
 ut_mrf_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 am_ut_mrf_query_160_OBJECTS = ut-mrf-query-160.$(OBJEXT)
 ut_mrf_query_160_OBJECTS = $(am_ut_mrf_query_160_OBJECTS)
 ut_mrf_query_160_LDADD = $(LDADD)
 ut_mrf_query_160_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -151,6 +175,7 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DOCBOOK = @DOCBOOK@
 DOXYGEN_PAPER_SIZE = @DOXYGEN_PAPER_SIZE@
 DSYMUTIL = @DSYMUTIL@
 DUMPBIN = @DUMPBIN@
@@ -235,6 +260,7 @@ PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PTHREAD_LDADD = @PTHREAD_LDADD@
 RANLIB = @RANLIB@
 SED = @SED@
 SEEKS_CODE_STATUS = @SEEKS_CODE_STATUS@
@@ -248,6 +274,9 @@ VERSION = @VERSION@
 XML2_CFLAGS = @XML2_CFLAGS@
 XML2_CONFIG = @XML2_CONFIG@
 XML2_LDADD = @XML2_LDADD@
+XSLT_CFLAGS = @XSLT_CFLAGS@
+XSLT_CONFIG = @XSLT_CONFIG@
+XSLT_LDADD = @XSLT_LDADD@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -271,7 +300,6 @@ builddir = @builddir@
 cf = @cf@
 datadir = @datadir@
 datarootdir = @datarootdir@
-docbook = @docbook@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -295,6 +323,7 @@ opencv2 = @opencv2@
 opencv_CFLAGS = @opencv_CFLAGS@
 opencv_LIBS = @opencv_LIBS@
 pdfdir = @pdfdir@
+personalization = @personalization@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 protobuf_CFLAGS = @protobuf_CFLAGS@
@@ -323,23 +352,27 @@ TESTS = $(check_PROGRAMS)
 ut_mrf_query_160_SOURCES = ut-mrf-query-160.cpp
 gen_mrf_query_160_SOURCES = gen-mrf-query-160.cpp
 ut_mrf_SOURCES = ut-mrf.cpp
-AM_CPPFLAGS = $(am__append_1) $(am__append_4) $(am__append_6) \
-	$(am__append_8) -Wall -g -Wno-deprecated -pipe -I${srcdir} \
-	-I${srcdir}/.. -I${top_srcdir}/src/dht -I${top_srcdir}/src/lsh \
-	-I${top_srcdir}/src/proxy -I${top_srcdir}/src/utils \
-	-I$(top_srcdir)/src/plugins/websearch @PCRE_CFLAGS@ \
-	@XML2_CFLAGS@ @ICU_CFLAGS@ $(GTEST_CPPFLAGS)
-AM_LDFLAGS = $(am__append_2) $(am__append_5) $(am__append_7) \
-	$(am__append_9) -L.. -L$(top_builddir)/src/dht \
-	-L$(top_builddir)/src/lsh -L$(top_builddir)/src/proxy \
-	-L$(top_builddir)/src/utils \
-	-L$(top_builddir)/src/plugins/websearch $(GTEST_LDFLAGS) \
-	$(am__append_11)
-LDADD = $(am__append_3) $(am__append_10) -lseeksdht -lseekslsh \
-	-lseeksproxy -lseeksplugins -lseeksutils \
-	-lseekswebsearchplugin -lrmd160 @XML2_LDADD@ @CURL_LDADD@ \
-	@ICU_LDADD@ -lpthread -lpcreposix -lpcre -lz @LCOV_LIBS@ \
-	$(GTEST_LIBS)
+AM_CPPFLAGS = $(am__append_1) $(am__append_4) $(am__append_7) \
+	$(am__append_9) $(am__append_11) -Wall -g -Wno-deprecated \
+	-pipe -I${srcdir} -I${srcdir}/.. -I${top_srcdir}/src/dht \
+	-I${top_srcdir}/src/lsh -I${top_srcdir}/src/proxy \
+	-I${top_srcdir}/src/utils \
+	-I$(top_srcdir)/src/plugins/websearch \
+	-I$(top_srcdir)/src/plugins/websearch_api_compat @PCRE_CFLAGS@ \
+	@XML2_CFLAGS@ @ICU_CFLAGS@ $(GTEST_CPPFLAGS) $(am__append_15)
+AM_LDFLAGS = $(am__append_2) $(am__append_5) $(am__append_8) \
+	$(am__append_10) $(am__append_12) -L.. \
+	-L$(top_builddir)/src/dht -L$(top_builddir)/src/lsh \
+	-L$(top_builddir)/src/proxy -L$(top_builddir)/src/utils \
+	-L$(top_builddir)/src/plugins/websearch \
+	-L$(top_builddir)/src/plugins/websearch_api_compat \
+	$(GTEST_LDFLAGS) $(am__append_14) $(am__append_16)
+LDADD = $(am__append_3) $(am__append_6) $(am__append_13) -lseeksdht \
+	-lseekslsh -lseeksproxy -lseeksplugins -lseeksutils \
+	-lseekswebsearchplugin -lseekswebsearchapicompatplugin \
+	-lrmd160 @XML2_LDADD@ @CURL_LDADD@ @ICU_LDADD@ @PTHREAD_LDADD@ \
+	-lpcreposix -lpcre -lz @LCOV_LIBS@ $(GTEST_LIBS) \
+	$(am__append_17)
 all: all-am
 
 .SUFFIXES:

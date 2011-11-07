@@ -1,0 +1,328 @@
+'\" -*- coding: us-ascii -*-
+.if \n(.g .ds T< \\FC
+.if \n(.g .ds T> \\F[\n[.fam]]
+.de URL
+\\$2 \(la\\$1\(ra\\$3
+..
+.if \n(.g .mso www.tmac
+.TH "seeks cli" 1 2011-10-08 "" ""
+.SH NAME
+seeks_cli \- the Seeks command line interaction tool.
+.SH SYNOPSIS
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[\fB--timeout \fIseconds\fB\fR] [\fB--proxy \fIadd:port\fB\fR] [\fB--output \fIhtml,json,xml\fB\fR] [\fB--x \fIget,put,delete,post\fB\fR] [command] [url] [\fBquery\fR] [\fBargs\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+info 
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+peers 
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[\fB--x \fIget\fB\fR] recommend [url] [query] [\fB--nreco \fInreco\fB\fR] [\fB--radius \fIradius\fB\fR] [\fB--peers \fIlocal|ring\fB\fR] [\fB--lang \fIlang\fB\fR] [\fB--order \fIrank|new-date|old-date|new-activity|old-activity\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[\fB--x \fIpost\fB\fR] recommend [url] [query] [--title title] [\fB--radius \fIradius\fB\fR] [\fB--peers \fIlocal|ring\fB\fR] [\fB--lang \fIlang\fB\fR] [\fB--url-check \fI0|1\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[\fB--x \fIdelete\fB\fR] recommend [url] [query] [\fB--url \fIurl\fB\fR] [\fB--lang \fIlang\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+suggest [url] [query] [\fB--nsugg \fInsugg\fB\fR] [\fB--radius \fIradius\fB\fR] [\fB--peers \fIlocal|ring\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[\fB--x \fIget,put,delete,post\fB\fR] search [url] [query] [\fB--sid \fIsnippet_id\fB\fR] [\fB--surl \fIurl\fB\fR] [\fB--engines \fIengines\fB\fR] [\fB--rpp \fIrpp\fB\fR] [\fB--page \fIpage\fB\fR] [\fB--prs \fIon|off\fB\fR] [\fB--lang \fIlang\fB\fR] [\fB--thumbs \fIon|off\fB\fR] [\fB--expansion \fIexpansion\fB\fR] [\fB--peers \fIlocal|ring\fB\fR] [\fB--order \fIrank|new-date|old-date|new-activity|old-activity\fB\fR] [\fB--redirect \fIurl\fB\fR] [\fB--cpost \fIurl\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+words [url] [query] [\fB--sid \fIsnippet_id\fB\fR] [\fB--surl \fIurl\fB\fR] [\fB--lang \fIlang\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+recent_queries [url] [\fB--nq \fInq\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+cluster_types [url] [query] [\fB--lang \fIlang\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+cluster_auto [url] [query] [\fB--nclusters \fInclusters\fB\fR] [\fB--lang \fIlang\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+similar [url] [query] [\fB--sid \fIsnippet_id\fB\fR] [\fB--surl \fIurl\fB\fR] [\fB--lang \fIlang\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBseeks_cli\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+cache [url] [query] [\fB--url \fIurl\fB\fR] [\fB--lang \fIlang\fB\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+.SH DESCRIPTION
+Seeks CLI is a command line client for controlling remote seeks
+servers through Seeks API.
+Seeks is an open source:
+.PP
+* websearch proxy and meta-search engine,
+.PP
+* real-time p2p pattern matching network for social websearch. 
+.PP
+The Seeks CLI uses the Seeks API to interact with remote
+Seeks servers. The API can be found here:
+http://seeks-project.info/wiki/index.php/API-0.4.0
+.SH COMMANDS
+Every command interacts with different resources on the remote
+Seeks server.
+.TP 
+info
+Requests server general information.
+.TP 
+peers
+Requests the list of configured peers that form the P2P ring
+of the remote server.
+.TP 
+recommend
+Get, post or delete a search result from / to the remote server.
+.TP 
+suggest
+Request a set of query suggestions from the remote
+server's P2P ring.
+.TP 
+search
+Get, post or delete queries and search results from the
+remote server's data feeds and its P2P ring.
+The remote server's feeds can range from search engines to
+websites, wikis, ...
+.TP 
+words
+Requests a list of most discriminating words for a given query.
+.TP 
+recent_queries
+Requests the set of recent queries that were issued on the
+remote server.
+.TP 
+cluster_types
+Requests a grouping of search results by type (webpages,
+wikis, files, videos, ...).
+.TP 
+cluster_auto
+Requests an automatic grouping and labeling of results. Experimental.
+.TP 
+similar
+Requests an ordered selection of search results that are
+the most similar to a given search result.
+.TP 
+cache 
+Requests a full Web page if it is available from the
+remote server's cache.
+.SH ARGUMENTS
+.TP 
+url
+The URL of the remote Seeks server to interact with.
+.TP 
+query
+The query string to the remote Seeks server.
+.SH OPTIONS
+.TP 
+--help 
+show this help message and exit.
+.TP 
+--timeout \fItimeout\fR
+Sets the timeout of server call, in seconds.
+.TP 
+--proxy \fIadd:port\fR 
+Specifies a proxy through which to connect to the remote
+server. Format is host address and port separated with ':'.
+To connect to a remote proxy Seeks server, use http://s.s/ as the
+remote url
+.TP 
+--output \fIhtml,json,xml\fR 
+Specifies the output format, HTML, JSON or XML.
+.TP 
+--x \fIget,put,delete,post\fR 
+Specifies the HTTP method used to interact with the remote Seeks server.
+.TP 
+--nreco \fInreco\fR 
+Specifies the number of recommendations (aka search results) requested.
+.TP 
+--radius \fIradius\fR 
+Specifies the similarity radius that is applied around the requested
+queries, and used to generate the recommended set of results. The
+higher the radius, the lower the precision, the higher the number of
+returned results.
+.TP 
+--peers \fIlocal|ring\fR 
+Specifies whether to get results from the remote Seeks server only,
+with the 'local' parameter, or from the P2P 'ring'. 'ring' is the default.
+.TP 
+--lang \fIlang\fR 
+Specifies an ISO-639 language code, e.g. en, fr, es, ...
+.TP 
+--order \fIrank|new-date|old-date|new-activity|old-activity\fR 
+Specifies the ranking applied to the returned set of search
+results. rank ranks according to Seeks internal
+collaborative filter. new-date ranks newly posted results
+first, the opposite returned
+by old-date. new-activity ranks most
+recently accessed results first, the opposited returned by old-activity.
+.TP 
+--title \fItitle\fR 
+Specifies the title of a search result URL when posting it on the remote
+Seeks server.
+.TP 
+--url-check \fI0|1\fR 
+When posting a search result URL, requests that the remote Seeks
+server checks on the URL by retrieving its content and title (1), or not (0).
+Note: the server can choose to ignore the --url-check 0 option.
+.TP 
+--url \fIurl\fR 
+Specifies a URL to post, using the recommend command, or to retrieve, using the 'cache' command.
+.TP 
+--nsugg \fInsugg\fR 
+Specifies the maximum number of requested query suggestions.
+.TP 
+--sid \fIsnippet_id\fR 
+Specifies a search result id. The id is a unique identifier attributed
+by the Seeks server to every search result.
+.TP 
+--surl \fIurl\fR 
+Specifies a search result URL. The CLI automatically computes the
+search snippet id (see --sid) and passes it to the server.
+.TP 
+--engines \fIengines\fR 
+A list of comma separated data feed and engine names to select results
+from. To know which engines are active on a remote Seeks server, use
+the info command.
+.TP 
+--rpp \fIrpp\fR 
+Specifies the number of search results returned per page.
+.TP 
+--page \fIpage\fR 
+Specifies which (virtual) page of results to return. Along with (--rpp)
+this option is useful when dealing with large number of search results.
+.TP 
+--prs \fIon | off\fR 
+Specifies whether or not to apply the P2P (or local) collaborative
+filter to the selection and ranking of results. Using 'off' turns the
+remote Seeks server into a meta-search engine (if configured that
+way). To select among the P2P and local collaborative filter, use the
+(--peers) option.
+.TP 
+--thumbs \fIthumbs\fR 
+Specifies whether to include a link to a search result thumbnails, for
+every returned result.
+.TP 
+--expansion \fIexpansion\fR 
+Using the search command, specifies the depth of the
+search. Technically, it asks the remote server to retrieve more
+results from the data feeds and engines it is connected to, and to
+enlarge the similarity radius of the query search accordingly. (see
+--radius for the equivalent parameter targeted at the P2P ring only).
+.TP 
+--redirect \fIurl\fR 
+TODO
+.TP 
+--cpost \fIurl\fR 
+Specifies a Seeks remote server different than the one being called to
+which cross-post the posted search result. Apply to the recommend
+command, along with '--x post'.
+.TP 
+--nq \fInq\fR 
+Specifies the maximum number of requested recent queries.
+.TP 
+--nclusters \fInclusters\fR 
+Specifies the maximum number of groups (aka. clusters) when issuing a call
+with the cluster_auto command.
+.SH COPYRIGHT
+This manual page was written by Emmanuel Benazera

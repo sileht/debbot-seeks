@@ -35,7 +35,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@HAVE_DOCBOOK2X_TRUE@am__append_1 = seeks.1
+@HAVE_DOCBOOK2X_TRUE@am__append_1 = seeks.1 seeks_cli.1
 subdir = doc
 DIST_COMMON = $(dist_man_MANS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -99,6 +99,7 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DOCBOOK = @DOCBOOK@
 DOXYGEN_PAPER_SIZE = @DOXYGEN_PAPER_SIZE@
 DSYMUTIL = @DSYMUTIL@
 DUMPBIN = @DUMPBIN@
@@ -183,6 +184,7 @@ PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PTHREAD_LDADD = @PTHREAD_LDADD@
 RANLIB = @RANLIB@
 SED = @SED@
 SEEKS_CODE_STATUS = @SEEKS_CODE_STATUS@
@@ -196,6 +198,9 @@ VERSION = @VERSION@
 XML2_CFLAGS = @XML2_CFLAGS@
 XML2_CONFIG = @XML2_CONFIG@
 XML2_LDADD = @XML2_LDADD@
+XSLT_CFLAGS = @XSLT_CFLAGS@
+XSLT_CONFIG = @XSLT_CONFIG@
+XSLT_LDADD = @XSLT_LDADD@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -219,7 +224,6 @@ builddir = @builddir@
 cf = @cf@
 datadir = @datadir@
 datarootdir = @datarootdir@
-docbook = @docbook@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -243,6 +247,7 @@ opencv2 = @opencv2@
 opencv_CFLAGS = @opencv_CFLAGS@
 opencv_LIBS = @opencv_LIBS@
 pdfdir = @pdfdir@
+personalization = @personalization@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 protobuf_CFLAGS = @protobuf_CFLAGS@
@@ -266,7 +271,7 @@ udbservice = @udbservice@
 uricapture = @uricapture@
 with_gtest = @with_gtest@
 dist_man_MANS = $(am__append_1)
-EXTRA_DIST = seeks.1.docbook
+EXTRA_DIST = seeks.1.docbook seeks_cli.1.docbook
 all: all-am
 
 .SUFFIXES:
@@ -510,6 +515,8 @@ uninstall-man: uninstall-man1
 
 seeks.1:
 	docbook2x-man ${srcdir}/seeks.1.docbook
+seeks_cli.1:
+	docbook2x-man ${srcdir}/seeks_cli.1.docbook
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

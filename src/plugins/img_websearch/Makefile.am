@@ -5,9 +5,9 @@ imgwebsearchplugindatadir = $(datadir)/seeks/plugins/img_websearch
 
 AM_CPPFLAGS=-Wno-deprecated -Wall -g -pipe \
             -I${srcdir} -I${srcdir}/../../utils -I${srcdir}/../../lsh -I${srcdir}/../../proxy -I${srcdir}/../websearch \
-	    -I${srcdir}/../../dht 
+	    -I${srcdir}/../../dht -I${srcdir}/../../proxy
 if HAVE_PROTOBUF
-AM_CPPFLAGS += -I${srcdir}/../query_capture -I../../proxy \
+AM_CPPFLAGS += -I${srcdir}/../query_capture -I${srcdir}/../cf
 	       `pkg-config --cflags protobuf`
 
 if HAVE_TC
@@ -23,6 +23,10 @@ if HAVE_OPENCV2
 AM_CPPFLAGS += `pkg-config opencv --cflags`
 endif
 ACLOCAL_AMFLAGS=-I m4
+
+if HAVE_XSLSERIALIZER_PLUGIN
+AM_CPPFLAGS += -I${srcdir}/../xsl_serializer
+endif
 
 imgwebsearchpluginlib_LTLIBRARIES=libseeksimgwebsearchplugin.la
 libseeksimgwebsearchplugin_la_SOURCES=img_websearch.cpp se_handler_img.cpp img_query_context.cpp img_websearch_configuration.cpp \
@@ -40,7 +44,7 @@ if USE_PERL
 libseeksimgwebsearchplugin_la_CXXFLAGS += `perl -MExtUtils::Embed -e ccopts`
 endif
 
-SUBDIRS=. tests
+#SUBDIRS=. tests
 
 imgwebsearchpluginconfigdir=$(sysconfdir)/seeks
 dist_imgwebsearchpluginconfig_DATA=img-websearch-config

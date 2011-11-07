@@ -34,10 +34,12 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @HAVE_PROTOBUF_TRUE@@HAVE_TC_TRUE@am__append_1 = query_capture uri_capture cf udb_service
-@HAVE_PROTOBUF_TRUE@am__append_2 = query_capture/tests \
-@HAVE_PROTOBUF_TRUE@	udb_service/tests
+@HAVE_XSLSERIALIZER_PLUGIN_TRUE@am__append_2 = xsl_serializer
 @HAVE_IMG_WEBSEARCH_PLUGIN_TRUE@am__append_3 = img_websearch
 @HAVE_HTTPSERV_PLUGIN_TRUE@am__append_4 = httpserv
+@HAVE_IMG_WEBSEARCH_PLUGIN_TRUE@am__append_5 = img_websearch/tests
+@HAVE_PROTOBUF_TRUE@am__append_6 = uri_capture/tests \
+@HAVE_PROTOBUF_TRUE@	query_capture/tests udb_service/tests
 subdir = src/plugins
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -65,9 +67,10 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = query_capture uri_capture cf udb_service websearch \
-	blocker no_tracking query_capture/tests udb_service/tests \
-	img_websearch httpserv
+DIST_SUBDIRS = query_capture uri_capture cf udb_service xsl_serializer \
+	websearch_api_compat websearch blocker no_tracking \
+	img_websearch httpserv websearch/tests img_websearch/tests \
+	uri_capture/tests query_capture/tests udb_service/tests
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -117,6 +120,7 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DOCBOOK = @DOCBOOK@
 DOXYGEN_PAPER_SIZE = @DOXYGEN_PAPER_SIZE@
 DSYMUTIL = @DSYMUTIL@
 DUMPBIN = @DUMPBIN@
@@ -201,6 +205,7 @@ PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PTHREAD_LDADD = @PTHREAD_LDADD@
 RANLIB = @RANLIB@
 SED = @SED@
 SEEKS_CODE_STATUS = @SEEKS_CODE_STATUS@
@@ -214,6 +219,9 @@ VERSION = @VERSION@
 XML2_CFLAGS = @XML2_CFLAGS@
 XML2_CONFIG = @XML2_CONFIG@
 XML2_LDADD = @XML2_LDADD@
+XSLT_CFLAGS = @XSLT_CFLAGS@
+XSLT_CONFIG = @XSLT_CONFIG@
+XSLT_LDADD = @XSLT_LDADD@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -237,7 +245,6 @@ builddir = @builddir@
 cf = @cf@
 datadir = @datadir@
 datarootdir = @datarootdir@
-docbook = @docbook@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -261,6 +268,7 @@ opencv2 = @opencv2@
 opencv_CFLAGS = @opencv_CFLAGS@
 opencv_LIBS = @opencv_LIBS@
 pdfdir = @pdfdir@
+personalization = @personalization@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 protobuf_CFLAGS = @protobuf_CFLAGS@
@@ -283,8 +291,9 @@ top_srcdir = @top_srcdir@
 udbservice = @udbservice@
 uricapture = @uricapture@
 with_gtest = @with_gtest@
-SUBDIRS = $(am__append_1) websearch blocker no_tracking \
-	$(am__append_2) $(am__append_3) $(am__append_4)
+SUBDIRS = $(am__append_1) $(am__append_2) websearch_api_compat \
+	websearch blocker no_tracking $(am__append_3) $(am__append_4) \
+	websearch/tests $(am__append_5) $(am__append_6)
 all: all-recursive
 
 .SUFFIXES:

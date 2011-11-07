@@ -1,9 +1,9 @@
 /**
  * Purpose     :  Declares functions to intercept request, generate
- *                html or gif answers, and to compose HTTP resonses.
+ *                html or JSON answers, and to compose HTTP responses.
  *
  * Copyright   :  Modified by Emmanuel Benazera for the Seeks Project,
- *                2009.
+ *                2009 - 2011.
  *
  *                Written by and Copyright (C) 2001-2009 the SourceForge
  *                Privoxy team. http://www.privoxy.org/
@@ -37,8 +37,9 @@
 
 #include "proxy_dts.h"
 #include "configuration_spec.h"
-
 #include "stl_hash.h"
+
+#include <string>
 
 namespace sp
 {
@@ -111,7 +112,9 @@ namespace sp
                                           http_response *rsp,
                                           const char *template_name);
       static sp_err cgi_error_bad_param(const client_state *csp,
-                                        http_response *rsp);
+                                        http_response *rsp,
+                                        const hash_map<const char*,const char*,hash<const char*>,eqstr> *param_list,
+                                        const std::string &def="");
       static sp_err cgi_error_disabled(const client_state *csp,
                                        http_response *rsp);
       static sp_err cgi_error_plugin(const client_state *csp,
@@ -120,7 +123,9 @@ namespace sp
                                      const std::string &pname);
       static sp_err cgi_error_unknown(const client_state *csp,
                                       http_response *rsp,
-                                      sp_err error_to_report);
+                                      sp_err error_to_report,
+                                      const hash_map<const char*,const char*,hash<const char*>,eqstr> *param_list,
+                                      const std::string &def="");
 
       static sp_err get_number_param(client_state *csp,
                                      const hash_map<const char*,const char*,hash<const char*>,eqstr> *parameters,
