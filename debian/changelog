@@ -1,3 +1,12 @@
+seeks (0.4.0-RC2-2) UNRELEASED; urgency=low
+
+  [ Mehdi Abaakouk ]
+  * Update rules and deps for 0.4
+
+  [ Abaakouk Mehdi ]
+
+ -- Abaakouk Mehdi <theli48@gmail.com>  Tue, 08 Nov 2011 08:31:55 +0100
+
 seeks (0.4.0-RC2-1) UNRELEASED; urgency=low
 
   [ Mehdi Abaakouk ]
