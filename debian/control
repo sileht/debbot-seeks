@@ -2,7 +2,7 @@ Source: seeks
 Section: web
 Priority: extra
 Maintainer: Mehdi ABAAKOUK <theli48@gmail.com>
-Build-Depends: debhelper (>= 7.0.50~), autotools-dev, autoconf, libxml2-dev, libpcre3-dev, libcurl3-dev, docbook2x, libtool, libevent-dev, libprotobuf-dev, protobuf-compiler, libcv-dev, libcvaux-dev, libhighgui-dev, libtokyocabinet-dev,libtokyotyrant-dev, libicu-dev, doxygen, libgtest-dev
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev, autoconf, libxml2-dev, libpcre3-dev, libcurl3-dev, docbook2x, docbook-xml, libtool, libevent-dev, libprotobuf-dev, protobuf-compiler, libcv-dev, libcvaux-dev, libhighgui-dev, libtokyocabinet-dev,libtokyotyrant-dev, libicu-dev, doxygen
 Standards-Version: 3.9.2
 Homepage: http://www.seeks-project.info/
 
@@ -21,3 +21,4 @@ Description: Extensible websearch proxy & meta-search engine with personalized r
  experience on these results. On this basis, Seeks allows for true real-time,
  decentralized, websearch to emerge. In the long term, there is no need for
  web crawlers and third-party web indexes.
+ .

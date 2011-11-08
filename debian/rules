@@ -3,6 +3,9 @@
 #export DH_VERBOSE=1
 #export DH_OPTIONS=-v
 
+
+export DEB_LDFLAGS_APPEND = "-Wl,--no-as-needed"
+
 %:
 	dh $@ --with autotools-dev
 
