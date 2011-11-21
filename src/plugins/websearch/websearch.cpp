@@ -1181,7 +1181,17 @@ namespace seeks_plugins
         else if (err != SP_ERR_OK)
           {
             mutex_unlock(&qc->_qc_mutex);
-            delete pers_thread_arg;
+#if defined(PROTOBUF) && defined(TC)
+            if (persf)
+              {
+                while(!pers_thread_arg->_done)
+                  {
+                    cond_broadcast(&qc->_feeds_ack_cond);
+                  }
+                delete pers_thread_arg;
+                pthread_join(pers_thread,NULL);
+              }
+#endif
             return err;
           }
 
@@ -1248,7 +1258,17 @@ namespace seeks_plugins
         else if (err != SP_ERR_OK)
           {
             mutex_unlock(&qc->_qc_mutex);
-            delete pers_thread_arg;
+#if defined(PROTOBUF) && defined(TC)
+            if (persf)
+              {
+                while(!pers_thread_arg->_done)
+                  {
+                    cond_broadcast(&qc->_feeds_ack_cond);
+                  }
+                delete pers_thread_arg;
+                pthread_join(pers_thread,NULL);
+              }
+#endif
             return err;
           }
 
@@ -1321,8 +1341,8 @@ namespace seeks_plugins
                 csp,rsp,parameters,qc);
         else if (ui_str == "dyn" && output_str == "html")
           {
-            // XXX: the template is filled up and returned earlier.
             // dynamic UI uses JSON calls to fill up results.
+            dynamic_renderer::render_result_page(csp,rsp,parameters);
           }
 #ifdef FEATURE_XSLSERIALIZER_PLUGIN
         else if (websearch::_xs_plugin && websearch::_xs_plugin_activated &&  !miscutil::strcmpic(output, "xml"))
