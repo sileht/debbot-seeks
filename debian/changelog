@@ -1,3 +1,9 @@
+seeks (1:0.4.0-1) UNRELEASED; urgency=low
+
+  * Snapshot version 0.4.0
+
+ -- Abaakouk Mehdi <theli48@gmail.com>  Mon, 21 Nov 2011 18:12:03 +0100
+
 seeks (1:0.4.0-0) UNRELEASED; urgency=low
 
   * Add epoch due tu RC suffix in previous version
