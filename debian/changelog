@@ -1,3 +1,13 @@
+seeks (1:0.4.0-8) UNRELEASED; urgency=low
+
+  [ Mehdi Abaakouk ]
+  * restore previous behavior for LDFLAGS
+  * Restore previosu bahavior for LDFLAGS
+
+  [ Abaakouk Mehdi ]
+
+ -- Abaakouk Mehdi <theli48@gmail.com>  Tue, 22 Nov 2011 10:42:26 +0100
+
 seeks (1:0.4.0-7) UNRELEASED; urgency=low
 
   * Snapshot version 0.4.0
