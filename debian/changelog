@@ -1,3 +1,9 @@
+seeks (1:0.4.0-10) UNRELEASED; urgency=low
+
+  * Snapshot version 0.4.0
+
+ -- Mehdi ABAAKOUK <sileht@sileht.net>  Mon, 20 Feb 2012 10:16:41 +0100
+
 seeks (1:0.4.0-9) UNRELEASED; urgency=low
 
   * Snapshot version 0.4.0
